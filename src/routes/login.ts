@@ -33,7 +33,7 @@ router.post(apiPrefix + "/login", async (req: Request, res: Response) => {
   console.log(req.ip, "login=============>IP");
   const { username, password } = req.body;
   // 检查参数是否合法
-  verificationFun(req, res, async () => {
+  verificationFun(req, res, false, async () => {
     console.log("我是校验通过后才能执行的文字");
     // 查询数据库中是否存在该用户名
     const sql = `SELECT * FROM users WHERE username = ?`;
@@ -71,8 +71,8 @@ router.post(apiPrefix + "/login", async (req: Request, res: Response) => {
       });
     } catch (err: any) {
       // 处理异常情况
-      console.error(`SQL 查询失败: ${err}`);
-      return res.status(500).json({ message: "服务器出错" + err.message });
+      console.error(`登录SQL 查询失败: ${err}`);
+      return res.status(500).json({ message: "登录服务器出错" + err.message });
     }
   });
 });
@@ -81,7 +81,7 @@ router.post(apiPrefix + "/login", async (req: Request, res: Response) => {
 router.post(apiPrefix + "/register", async (req: Request, res: Response) => {
   const connect = await connectionMysql();
   const { username, password } = req.body;
-  verificationFun(req, res, async () => {
+  verificationFun(req, res, false, async () => {
     // 查询数据库中是否存在该用户名
     const sql = `SELECT * FROM users WHERE username = ?`;
     try {
@@ -106,24 +106,74 @@ router.post(apiPrefix + "/register", async (req: Request, res: Response) => {
       console.error(error);
       return res
         .status(500)
-        .json({ message: "服务器出错，请稍后再试：" + error.message });
+        .json({ message: "注册服务器出错，请稍后再试：" + error.message });
     }
   });
 });
 
+// 重置密码
+router.post(apiPrefix + "/forgotPassword", async (req: Request, res: Response) => {
+  const connect = await connectionMysql();
+  const { username, password, newPassword } = req.body;
+  verificationFun(req, res, true, async () => {
+    // 查询数据库中是否存在该用户名
+    const sql = `SELECT * FROM users WHERE username = ?`;
+    try {
+      const result = await connect.query(sql, [username]);
+      const users: any[] = Array.isArray(result) ? result : [result];
+      const userAry = users[0];
+      // 如果找不到用户，返回错误信息
+      if (!userAry.length) {
+        return res.status(404).json({ message: '该用户不存在' });
+      }
+      // 判断输入的原始密码是否正确
+      const isPasswordCorrect = await bcrypt.compare(password, userAry[0].password);
+      if (!isPasswordCorrect) {
+        return res.status(400).json({ message: "原始密码不正确" });
+      }
+      // 对新密码进行哈希加密
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+      // 更新用户密码
+      const newSql = `UPDATE users SET password = ? WHERE userid = ?`;
+      const forgotPassword = await connect.query(
+        newSql,
+        [hashedPassword, userAry[0].userid]
+      );
+      if (forgotPassword) {
+        res.status(200).json({ message: "密码重置成功" });
+      }
+    } catch (error: any) {
+      console.error(error);
+      return res
+        .status(500)
+        .json({ message: "忘记密码·服务器出错，请稍后再试：" + error.message });
+    }
+  });
+})
+
 // 校验账号、密码的公用方法。
-function verificationFun(req: Request, res: Response, callBack: Function) {
-  const { username, password } = req.body;
+function verificationFun(req: Request, res: Response, isforgotPassword: boolean, callBack: Function) {
+  const { username, password, newPassword } = req.body;
   // 检查参数是否合法
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
   if (!username || !password) {
-    return res.status(400).json({ message: "用户名和密码不能为空！" });
+    if (isforgotPassword && !newPassword) {
+      return res.status(400).json({ message: "用户名、密码、新密码不能为空！" });
+    } else {
+      return res.status(400).json({ message: "用户名和密码不能为空！" });
+    }
   }
   if (username.length > 10 || password.length > 10) {
-    return res.status(400).json({ message: "用户名和密码太长，请重新输入！" });
+    if (isforgotPassword && !newPassword) {
+      return res.status(400).json({ message: "用户名、密码、新密码超过10个字符，请重新输入！" });
+    } else {
+      return res.status(400).json({ message: "用户名和密码超过10个字符，请重新输入！" });
+    }
   }
   callBack();
 }

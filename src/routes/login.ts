@@ -89,7 +89,7 @@ router.post(apiPrefix + "/register", async (req: Request, res: Response) => {
       const users: any[] = Array.isArray(result) ? result : [result];
       const userAry = users[0];
       if (userAry.length > 0) {
-        return res.status(400).json({ message: "用户名已存在" });
+        return res.status(400).json({ message: "用户名已存在！" });
       }
       // 使用bcrypt对密码进行加密
       const salt = await bcrypt.genSalt(10);
@@ -100,7 +100,7 @@ router.post(apiPrefix + "/register", async (req: Request, res: Response) => {
         [username, hashedPassword]
       );
       if (registUser) {
-        res.status(200).json({ message: "注册成功" });
+        res.status(200).json({ message: "注册成功！" });
       }
     } catch (error: any) {
       console.error(error);
@@ -120,10 +120,10 @@ function verificationFun(req: Request, res: Response, callBack: Function) {
     return res.status(400).json({ errors: errors.array() });
   }
   if (!username || !password) {
-    return res.status(400).json({ message: "用户名和密码不能为空" });
+    return res.status(400).json({ message: "用户名和密码不能为空！" });
   }
   if (username.length > 10 || password.length > 10) {
-    return res.status(400).json({ message: "用户名和密码太长，请重新输入" });
+    return res.status(400).json({ message: "用户名和密码太长，请重新输入！" });
   }
   callBack();
 }

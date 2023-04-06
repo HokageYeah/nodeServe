@@ -14,6 +14,8 @@ import connectionMysql from "@/tools/mysql_db";
 import { body, validationResult } from "express-validator";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+// import { validatorAry } from '@/schema/users-article'
+const validatorAry = require('@/schema/users-article');
 
 // 定义接口路径前缀
 const apiPrefix = "/user";

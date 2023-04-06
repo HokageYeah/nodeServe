@@ -45,7 +45,7 @@ router.post(apiPrefix + "/login", async (req: Request, res: Response) => {
         return res.status(400).json({ errors: [{ msg: "用户名或密码无效" }] });
       }
       console.log(
-        "userAry查看请求参数是什么============>：",
+        "userAry查看请求参数是什么============>：新的",
         userAry[0].password
       );
       console.log("password查看请求参数是什么============>：", password);

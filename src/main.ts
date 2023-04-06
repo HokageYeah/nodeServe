@@ -4,6 +4,8 @@ import yyconnection from "./tools/mysql_db";
 
 const path = require("path");
 const app = express();
+// 配置解析表单数据的中间件
+app.use(express.urlencoded({ extended: false }));
 // 设置static中间件后，浏览器访问时，会自动去public目录寻找资源
 app.use(express.static(path.resolve(__dirname, "./public")));
 // 导入并注册用户路由模块
@@ -18,7 +20,7 @@ app.get("/index", (req: Request, res: Response) => {
   console.log(req.ip, "app.js=============>IP");
   res.json({
     code: 200,
-    message: "我是as最新的appd.js",
+    message: "我是as最新的appd.jsc测试最新的",
   });
 });
 app.use("/api", userRouter);

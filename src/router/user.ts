@@ -5,6 +5,8 @@ import {
   useResetPassword,
 } from "@/router_handler/user_handler";
 import { Router } from "express";
+import { validatorAry } from "@/schema/users-article";
+// const validatorAry = require("@/schema/users-article");
 // 定义接口路径前缀
 const apiPrefix = "/user";
 // 创建路由对象
@@ -15,7 +17,7 @@ router.use(apiPrefix, (req, res, next) => {
   next();
 });
 // 登陆
-router.post(apiPrefix + "/login", userLogin);
+router.post(apiPrefix + "/login", validatorAry, userLogin);
 
 // 注册
 router.post(apiPrefix + "/register", userRegister);

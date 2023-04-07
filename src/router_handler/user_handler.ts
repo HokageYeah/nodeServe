@@ -13,8 +13,7 @@ import connectionMysql from "@/tools/mysql_db";
 import { body, validationResult } from "express-validator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-// import { validatorAry } from '@/schema/users-article'
-const validatorAry = require("@/schema/users-article");
+
 // 导入配置文件
 const config = require("@/tools/confi-jwt");
 
@@ -33,9 +32,7 @@ const userLogin = async (req: Request, res: Response) => {
       const users: any[] = Array.isArray(result) ? result : [result];
       const userAry = users[0];
       if (userAry.length === 0) {
-        return res
-          .status(400)
-          .json({ errors: [{ msg: "用户名或密码无效!!!" }] });
+        return res.status(400).json({ message: "用户名或密码无效!!!" });
       }
       console.log(
         "userAry查看请求参数是什么============>：新的",

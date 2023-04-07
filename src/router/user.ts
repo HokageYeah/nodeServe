@@ -20,10 +20,10 @@ router.use(apiPrefix, (req, res, next) => {
 router.post(apiPrefix + "/login", validatorAry, userLogin);
 
 // 注册
-router.post(apiPrefix + "/register", userRegister);
+router.post(apiPrefix + "/register", validatorAry, userRegister);
 
 // 重置密码
-router.post(apiPrefix + "/reset-password", useResetPassword);
+router.post(apiPrefix + "/reset-password", validatorAry, useResetPassword);
 
 // 将路由对象共享出去
 module.exports = router;

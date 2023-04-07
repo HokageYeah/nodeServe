@@ -49,15 +49,17 @@ const userLogin = async (req: Request, res: Response) => {
       // 生成 Token 字符串
       // 剔除完毕之后，user 中只保留了用户的 id, username, nickname, email 这四个属性的值
       const user = { ...userAry[0], password: "" };
+      console.log("查看user中都有哪些数据======>", user);
       const tokenStr = jwt.sign(user, config.jwtSecretKey, {
         expiresIn: "10h", // token 有效期为 10 个小时
+        algorithm: 'HS256', //设置签名算法
       });
       console.log("查看一下数据tokenStr：====>：", tokenStr);
       res.send({
-        status: 0,
+        status: 200,
         message: "登录成功！",
         // 为了方便客户端使用 Token，在服务器端直接拼接上 Bearer 的前缀
-        token: "Bearer " + tokenStr,
+        data: "Bearer " + tokenStr,
       });
     } catch (err: any) {
       // 处理异常情况

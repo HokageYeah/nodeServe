@@ -1,5 +1,4 @@
-import express from "express";
-import { Router, Request, Response } from "express";
+import { Request, Response } from "express";
 // pm2 start npm --name nodeServe -- run start --watch (这个命令会用pm2去执行管理node，并且会运行package.json中定义的start脚本
 // "start": "pm2 start src/main.ts --interpreter /Users/yuye/.nvm/versions/node/v14.21.2/bin/ts-node --watch", 这个方法无法管理@符号后面的内容。
 // 这个问题可能是由于在使用 pm2 运行项目时没有正确设置 tsconfig-paths 的原因导致的。可以按照以下步骤来解决：
@@ -12,25 +11,15 @@ import { Router, Request, Response } from "express";
 // 这将使用 pm2 运行 npm start 命令，其中包括 ts-node 解释器和 tsconfig-paths 注册器。这样你的 ts 项目中的路径别名就应该能够正确地解析了。
 import connectionMysql from "@/tools/mysql_db";
 import { body, validationResult } from "express-validator";
-import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 // import { validatorAry } from '@/schema/users-article'
-const validatorAry = require('@/schema/users-article');
-
-// 定义接口路径前缀
-const apiPrefix = "/user";
+const validatorAry = require("@/schema/users-article");
 // 导入配置文件
 const config = require("@/tools/confi-jwt");
-// 创建路由对象
-const router: Router = express.Router();
 
-// 添加 '/user' 前缀
-router.use(apiPrefix, (req, res, next) => {
-  next();
-});
-
-// 登陆
-router.post(apiPrefix + "/login", async (req: Request, res: Response) => {
+// 用户登录的处理函数
+const userLogin = async (req: Request, res: Response) => {
   const connect = await connectionMysql();
   console.log(req.ip, "login=============>IP");
   const { username, password } = req.body;
@@ -44,7 +33,9 @@ router.post(apiPrefix + "/login", async (req: Request, res: Response) => {
       const users: any[] = Array.isArray(result) ? result : [result];
       const userAry = users[0];
       if (userAry.length === 0) {
-        return res.status(400).json({ errors: [{ msg: "用户名或密码无效" }] });
+        return res
+          .status(400)
+          .json({ errors: [{ msg: "用户名或密码无效!!!" }] });
       }
       console.log(
         "userAry查看请求参数是什么============>：新的",
@@ -55,7 +46,7 @@ router.post(apiPrefix + "/login", async (req: Request, res: Response) => {
       const isMatch = await bcrypt.compare(password, userAry[0].password);
       console.log("查看一下数据isMatch：====>：", isMatch);
       if (!isMatch) {
-        return res.status(400).json({ message: "用户名或密码错误" });
+        return res.status(400).json({ message: "用户名或密码错误!!!!" });
       }
       // 生成JWT令牌
       // 生成 Token 字符串
@@ -77,10 +68,10 @@ router.post(apiPrefix + "/login", async (req: Request, res: Response) => {
       return res.status(500).json({ message: "登录服务器出错" + err.message });
     }
   });
-});
+};
 
-// 注册
-router.post(apiPrefix + "/register", async (req: Request, res: Response) => {
+// 用户注册处理函数
+const userRegister = async (req: Request, res: Response) => {
   const connect = await connectionMysql();
   const { username, password } = req.body;
   verificationFun(req, res, false, async () => {
@@ -111,10 +102,10 @@ router.post(apiPrefix + "/register", async (req: Request, res: Response) => {
         .json({ message: "注册服务器出错，请稍后再试：" + error.message });
     }
   });
-});
+};
 
-// 重置密码
-router.post(apiPrefix + "/forgotPassword", async (req: Request, res: Response) => {
+// 用户重置密码处理函数
+const useResetPassword = async (req: Request, res: Response) => {
   const connect = await connectionMysql();
   const { username, password, newPassword } = req.body;
   verificationFun(req, res, true, async () => {
@@ -126,10 +117,13 @@ router.post(apiPrefix + "/forgotPassword", async (req: Request, res: Response) =
       const userAry = users[0];
       // 如果找不到用户，返回错误信息
       if (!userAry.length) {
-        return res.status(404).json({ message: '该用户不存在' });
+        return res.status(404).json({ message: "该用户不存在" });
       }
-      // 判断输入的原始密码是否正确
-      const isPasswordCorrect = await bcrypt.compare(password, userAry[0].password);
+      // 判断输入的原始密码是否正确 使用bcrypt对输入的密码进行比较
+      const isPasswordCorrect = await bcrypt.compare(
+        password,
+        userAry[0].password
+      );
       if (!isPasswordCorrect) {
         return res.status(400).json({ message: "原始密码不正确" });
       }
@@ -139,24 +133,29 @@ router.post(apiPrefix + "/forgotPassword", async (req: Request, res: Response) =
 
       // 更新用户密码
       const newSql = `UPDATE users SET password = ? WHERE userid = ?`;
-      const forgotPassword = await connect.query(
-        newSql,
-        [hashedPassword, userAry[0].userid]
-      );
+      const forgotPassword = await connect.query(newSql, [
+        hashedPassword,
+        userAry[0].userid,
+      ]);
       if (forgotPassword) {
         res.status(200).json({ message: "密码重置成功" });
       }
     } catch (error: any) {
       console.error(error);
-      return res
-        .status(500)
-        .json({ message: "忘记密码·服务器出错，请稍后再试：" + error.message });
+      return res.status(500).json({
+        message: "忘记密码·服务器出错，请稍后再试：" + error.message,
+      });
     }
   });
-})
+};
 
 // 校验账号、密码的公用方法。
-function verificationFun(req: Request, res: Response, isforgotPassword: boolean, callBack: Function) {
+function verificationFun(
+  req: Request,
+  res: Response,
+  isforgotPassword: boolean,
+  callBack: Function
+) {
   const { username, password, newPassword } = req.body;
   // 检查参数是否合法
   const errors = validationResult(req);
@@ -165,20 +164,29 @@ function verificationFun(req: Request, res: Response, isforgotPassword: boolean,
   }
   if (!username || !password) {
     if (isforgotPassword && !newPassword) {
-      return res.status(400).json({ message: "用户名、密码、新密码不能为空！" });
+      return res
+        .status(400)
+        .json({ message: "用户名、密码、新密码不能为空！" });
     } else {
       return res.status(400).json({ message: "用户名和密码不能为空！" });
     }
   }
   if (username.length > 10 || password.length > 10) {
     if (isforgotPassword && !newPassword) {
-      return res.status(400).json({ message: "用户名、密码、新密码超过10个字符，请重新输入！" });
+      return res
+        .status(400)
+        .json({ message: "用户名、密码、新密码超过10个字符，请重新输入！" });
     } else {
-      return res.status(400).json({ message: "用户名和密码超过10个字符，请重新输入！" });
+      return res
+        .status(400)
+        .json({ message: "用户名和密码超过10个字符，请重新输入！" });
     }
   }
   callBack();
 }
 
-// 将路由对象共享出去
-module.exports = router;
+export {
+  userLogin, // 用户登录的处理函数
+  userRegister, // 用户注册的处理函数
+  useResetPassword, // 用户重置密码的处理函数
+};

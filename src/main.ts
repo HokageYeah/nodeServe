@@ -9,7 +9,7 @@ app.use(express.urlencoded({ extended: false }));
 // 设置static中间件后，浏览器访问时，会自动去public目录寻找资源
 app.use(express.static(path.resolve(__dirname, "./public")));
 // 导入并注册用户路由模块
-const userRouter: Router = require("./routes/login");
+const userRouter: Router = require("./router/user");
 
 // 将 connection 变量暴露到全局，可以在其他模块中直接使用
 // // 或者使用 process 全局变量

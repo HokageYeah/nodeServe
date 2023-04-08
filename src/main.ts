@@ -26,12 +26,22 @@ app.use(express.static(path.resolve(__dirname, "./public")));
 // process.connection = connection;
 (global as any).connection = yyconnection();
 
-app.get("/index", (req: Request, res: Response) => {
+app.get("/api/index", (req: Request, res: Response) => {
   console.log(req.ip, "app.js=============>IP");
-  res.json({
-    code: 200,
-    message: "我是as最新的appd.jsc测试最新的",
-  });
+  // res.json({
+  //   code: 200,
+  //   message: "我是as最新的appd.jsc测试最新的",
+  // });
+  res.send(`
+          <html>
+              <head>
+                  <title>SSR</title>
+              </head>
+              <body>
+                  <p>hello world你好啊</p>
+              </body>
+          </html>
+        `);
 });
 app.use("/api", userRouter);
 app.use("/permissions", userInfoRouter);

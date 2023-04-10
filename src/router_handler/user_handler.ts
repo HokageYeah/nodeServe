@@ -29,19 +29,21 @@ const userLogin = async (req: Request, res: Response) => {
     // 查询数据库中是否存在该用户名
     const sql = `SELECT * FROM users WHERE username = ?`;
     try {
-      const result = await connect.query(sql, [username]);
+      const result = await connect.execute(sql, [username]);
+      // 释放连接
+      connect.release();
       const users: any[] = Array.isArray(result) ? result : [result];
-      const userAry = users[0];
-      if (userAry.length === 0) {
+      const [values, fields] = users;
+      if (values.length === 0) {
         return res.status(400).json({ message: "用户名或密码无效!!!" });
       }
       console.log(
-        "userAry查看请求参数是什么============>：新的",
-        userAry[0].password
+        "values查看请求参数是什么============>：新的",
+        values[0].password,
       );
       console.log("password查看请求参数是什么============>：", password);
       // 使用bcrypt对输入的密码进行比较
-      const isMatch = await bcrypt.compare(password, userAry[0].password);
+      const isMatch = await bcrypt.compare(password, values[0].password);
       console.log("查看一下数据isMatch：====>：", isMatch);
       if (!isMatch) {
         return res.status(400).json({ message: "用户名或密码错误!!!!" });
@@ -49,7 +51,7 @@ const userLogin = async (req: Request, res: Response) => {
       // 生成JWT令牌
       // 生成 Token 字符串
       // 剔除完毕之后，user 中只保留了用户的 id, username, nickname, email 这四个属性的值
-      const user = { ...userAry[0], password: "" };
+      const user = { ...values[0], password: "" };
       console.log("查看user中都有哪些数据======>", user);
       const tokenStr = jwt.sign(user, config.jwtSecretKey, {
         expiresIn: "10h", // token 有效期为 10 个小时
@@ -78,23 +80,24 @@ const userRegister = async (req: Request, res: Response) => {
     // 查询数据库中是否存在该用户名
     const sql = `SELECT * FROM users WHERE username = ?`;
     try {
-      const result = await connect.query(sql, [username]);
+      const result = await connect.execute(sql, [username]);
       const users: any[] = Array.isArray(result) ? result : [result];
-      const userAry = users[0];
-      if (userAry.length > 0) {
+      const [values, fields] = users[0];
+      if (values.length > 0) {
         return res.status(400).json({ message: "用户名已存在！" });
       }
       // 使用bcrypt对密码进行加密
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
       // 将用户名和加密后的密码保存到数据库中
-      const registUser = await connect.query(
+      const registUser = await connect.execute(
         "INSERT INTO users (username, password) VALUES (?, ?)",
         [username, hashedPassword]
       );
+      console.log("查询注册后数据库返回的数据是什么=====>", registUser);
       const resultSetHeader = registUser[0] as ResultSetHeader;
       const userid = resultSetHeader.insertId;
-      const userDetailsInsertResult = await connect.query({
+      const userDetailsInsertResult = await connect.execute({
         sql: "INSERT INTO user_details (userid, username, password, user_avatar_pic, user_address) VALUES (?, ?, ?, ?, ?)",
         values: [
           userid,
@@ -104,6 +107,8 @@ const userRegister = async (req: Request, res: Response) => {
           "地址" + userid,
         ],
       });
+      // 释放连接
+      connect.release();
       if (registUser && userDetailsInsertResult) {
         res.status(200).json({ code: 200, message: "注册成功！" });
       }
@@ -124,17 +129,17 @@ const useResetPassword = async (req: Request, res: Response) => {
     // 查询数据库中是否存在该用户名
     const sql = `SELECT * FROM users WHERE username = ?`;
     try {
-      const result = await connect.query(sql, [username]);
+      const result = await connect.execute(sql, [username]);
       const users: any[] = Array.isArray(result) ? result : [result];
-      const userAry = users[0];
+      const [values, fields] = users[0];
       // 如果找不到用户，返回错误信息
-      if (!userAry.length) {
+      if (!values.length) {
         return res.status(404).json({ message: "该用户不存在" });
       }
       // 判断输入的原始密码是否正确 使用bcrypt对输入的密码进行比较
       const isPasswordCorrect = await bcrypt.compare(
         password,
-        userAry[0].password
+        values[0].password
       );
       if (!isPasswordCorrect) {
         return res.status(400).json({ message: "原始密码不正确" });
@@ -145,10 +150,12 @@ const useResetPassword = async (req: Request, res: Response) => {
 
       // 更新用户密码
       const newSql = `UPDATE users SET password = ? WHERE userid = ?`;
-      const forgotPassword = await connect.query(newSql, [
+      const forgotPassword = await connect.execute(newSql, [
         hashedPassword,
-        userAry[0].userid,
+        values[0].userid,
       ]);
+      // 释放连接
+      connect.release();
       if (forgotPassword) {
         res.status(200).json({ message: "密码重置成功" });
       }

@@ -5,6 +5,7 @@ import { expressjwt } from "express-jwt"; // 解析 token 的中间件
 import path from "path";
 import { userRouter } from "@/router/user";
 import { userInfoRouter } from "@/router/user-info";
+import  bodyParser from "body-parser";
 
 // 导入配置文件
 const config = require("@/tools/confi-jwt");
@@ -16,8 +17,10 @@ app.use(
     path: [/^\/api\//],
   })
 );
-// 配置解析表单数据的中间件
-app.use(express.urlencoded({ extended: false }));
+// 配置解析表单数据的中间件 application/x-www-form-urlencoded
+// app.use(express.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json()); // 解析 传递的JSON 数据
 // 设置static中间件后，浏览器访问时，会自动去public目录寻找资源
 app.use(express.static(path.resolve(__dirname, "./public")));
 

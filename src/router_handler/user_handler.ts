@@ -13,6 +13,7 @@ import connectionMysql from "@/tools/mysql_db";
 import { body, validationResult } from "express-validator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { ResultSetHeader } from "mysql2";
 
 // 导入配置文件
 const config = require("@/tools/confi-jwt");
@@ -52,7 +53,7 @@ const userLogin = async (req: Request, res: Response) => {
       console.log("查看user中都有哪些数据======>", user);
       const tokenStr = jwt.sign(user, config.jwtSecretKey, {
         expiresIn: "10h", // token 有效期为 10 个小时
-        algorithm: 'HS256', //设置签名算法
+        algorithm: "HS256", //设置签名算法
       });
       console.log("查看一下数据tokenStr：====>：", tokenStr);
       res.send({
@@ -91,8 +92,20 @@ const userRegister = async (req: Request, res: Response) => {
         "INSERT INTO users (username, password) VALUES (?, ?)",
         [username, hashedPassword]
       );
-      if (registUser) {
-        res.status(200).json({ message: "注册成功！" });
+      const resultSetHeader = registUser[0] as ResultSetHeader;
+      const userid = resultSetHeader.insertId;
+      const userDetailsInsertResult = await connect.query({
+        sql: "INSERT INTO user_details (userid, username, password, user_avatar_pic, user_address) VALUES (?, ?, ?, ?, ?)",
+        values: [
+          userid,
+          username,
+          hashedPassword,
+          "图片" + userid,
+          "地址" + userid,
+        ],
+      });
+      if (registUser && userDetailsInsertResult) {
+        res.status(200).json({ code: 200, message: "注册成功！" });
       }
     } catch (error: any) {
       console.error(error);

@@ -1,9 +1,5 @@
 import express from "express";
-import {
-  userLogin,
-  userRegister,
-  useResetPassword,
-} from "@/router_handler/user_handler";
+import userController from "@/router_handler/user_handler";
 import { Router } from "express";
 import { validatorAry } from "@/schema/users-article";
 // const validatorAry = require("@/schema/users-article");
@@ -17,13 +13,13 @@ userRouter.use(apiPrefix, (req, res, next) => {
   next();
 });
 // 登陆
-userRouter.post(apiPrefix + "/login", validatorAry, userLogin);
+userRouter.post(apiPrefix + "/login", validatorAry, userController.userLogin.bind(userController));
 
 // 注册
-userRouter.post(apiPrefix + "/register", validatorAry, userRegister);
+userRouter.post(apiPrefix + "/register", validatorAry, userController.userRegister.bind(userController));
 
 // 重置密码
-userRouter.post(apiPrefix + "/reset-password", validatorAry, useResetPassword);
+userRouter.post(apiPrefix + "/reset-password", validatorAry, userController.useResetPassword.bind(userController));
 
 // 将路由对象共享出去
 export { userRouter };

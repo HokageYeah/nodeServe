@@ -17,195 +17,194 @@ import { ResultSetHeader } from "mysql2";
 
 // 导入配置文件
 const config = require("@/tools/confi-jwt");
+class userController {
+  // 用户登录的处理函数
+  async userLogin(req: Request, res: Response) {
+    const connect = await connectionMysql();
+    console.log(req.ip, "login=============>IP");
+    console.log(this, "login查看this指向=============>this");
+    const { username, password } = req.body;
+    // 检查参数是否合法
+    this.verificationFun(req, res, false, async () => {
+      console.log("我是校验通过后才能执行的文字");
+      // 查询数据库中是否存在该用户名
+      const sql = `SELECT * FROM users WHERE username = ?`;
+      try {
+        const result = await connect.execute(sql, [username]);
+        // 释放连接
+        // connect.release();
+        const users: any[] = Array.isArray(result) ? result : [result];
+        const [values, fields] = users;
+        if (values.length === 0) {
+          return res.status(400).json({ message: "用户名或密码无效!!!" });
+        }
+        console.log(
+          "values查看请求参数是什么============>：新的",
+          values[0].password,
+        );
+        console.log("password查看请求参数是什么============>：", password);
+        // 使用bcrypt对输入的密码进行比较
+        const isMatch = await bcrypt.compare(password, values[0].password);
+        console.log("查看一下数据isMatch：====>：", isMatch);
+        if (!isMatch) {
+          return res.status(400).json({ message: "用户名或密码错误!!!!" });
+        }
+        // 生成JWT令牌
+        // 生成 Token 字符串
+        // 剔除完毕之后，user 中只保留了用户的 id, username, nickname, email 这四个属性的值
+        const user = { ...values[0], password: "" };
+        console.log("查看user中都有哪些数据======>", user);
+        const tokenStr = jwt.sign(user, config.jwtSecretKey, {
+          expiresIn: "10h", // token 有效期为 10 个小时
+          algorithm: "HS256", //设置签名算法
+        });
+        console.log("查看一下数据tokenStr：====>：", tokenStr);
+        res.send({
+          status: 200,
+          message: "登录成功！",
+          // 为了方便客户端使用 Token，在服务器端直接拼接上 Bearer 的前缀
+          data: "Bearer " + tokenStr,
+        });
+      } catch (err: any) {
+        // 处理异常情况
+        console.error(`登录SQL 查询失败: ${err}`);
+        return res.status(500).json({ message: "登录服务器出错" + err.message });
+      }
+    });
+  };
 
-// 用户登录的处理函数
-const userLogin = async (req: Request, res: Response) => {
-  const connect = await connectionMysql();
-  console.log(req.ip, "login=============>IP");
-  const { username, password } = req.body;
-  // 检查参数是否合法
-  verificationFun(req, res, false, async () => {
-    console.log("我是校验通过后才能执行的文字");
-    // 查询数据库中是否存在该用户名
-    const sql = `SELECT * FROM users WHERE username = ?`;
-    try {
-      const result = await connect.execute(sql, [username]);
-      // 释放连接
-      connect.release();
-      const users: any[] = Array.isArray(result) ? result : [result];
-      const [values, fields] = users;
-      if (values.length === 0) {
-        return res.status(400).json({ message: "用户名或密码无效!!!" });
+  // 用户注册处理函数
+  async userRegister(req: Request, res: Response) {
+    const connect = await connectionMysql();
+    const { username, password } = req.body;
+    this.verificationFun(req, res, false, async () => {
+      // 查询数据库中是否存在该用户名
+      const sql = `SELECT * FROM users WHERE username = ?`;
+      try {
+        const result = await connect.execute(sql, [username]);
+        const users: any[] = Array.isArray(result) ? result : [result];
+        const [values, fields] = users;
+        if (values.length > 0) {
+          return res.status(400).json({ message: "用户名已存在！" });
+        }
+        // 使用bcrypt对密码进行加密
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        // 将用户名和加密后的密码保存到数据库中
+        const registUser = await connect.execute(
+          "INSERT INTO users (username, password) VALUES (?, ?)",
+          [username, hashedPassword]
+        );
+        console.log("查询注册后数据库返回的数据是什么=====>", registUser);
+        const resultSetHeader = registUser[0] as ResultSetHeader;
+        const userid = resultSetHeader.insertId;
+        const userDetailsInsertResult = await connect.execute({
+          sql: "INSERT INTO user_details (userid, username, password, user_avatar_pic, user_address) VALUES (?, ?, ?, ?, ?)",
+          values: [
+            userid,
+            username,
+            hashedPassword,
+            "图片" + userid,
+            "地址" + userid,
+          ],
+        });
+        // 释放连接
+        // connect.release();
+        if (registUser && userDetailsInsertResult) {
+          res.status(200).json({ code: 200, message: "注册成功！" });
+        }
+      } catch (error: any) {
+        console.error(error);
+        return res
+          .status(500)
+          .json({ message: "注册服务器出错，请稍后再试：" + error.message });
       }
-      console.log(
-        "values查看请求参数是什么============>：新的",
-        values[0].password,
-      );
-      console.log("password查看请求参数是什么============>：", password);
-      // 使用bcrypt对输入的密码进行比较
-      const isMatch = await bcrypt.compare(password, values[0].password);
-      console.log("查看一下数据isMatch：====>：", isMatch);
-      if (!isMatch) {
-        return res.status(400).json({ message: "用户名或密码错误!!!!" });
-      }
-      // 生成JWT令牌
-      // 生成 Token 字符串
-      // 剔除完毕之后，user 中只保留了用户的 id, username, nickname, email 这四个属性的值
-      const user = { ...values[0], password: "" };
-      console.log("查看user中都有哪些数据======>", user);
-      const tokenStr = jwt.sign(user, config.jwtSecretKey, {
-        expiresIn: "10h", // token 有效期为 10 个小时
-        algorithm: "HS256", //设置签名算法
-      });
-      console.log("查看一下数据tokenStr：====>：", tokenStr);
-      res.send({
-        status: 200,
-        message: "登录成功！",
-        // 为了方便客户端使用 Token，在服务器端直接拼接上 Bearer 的前缀
-        data: "Bearer " + tokenStr,
-      });
-    } catch (err: any) {
-      // 处理异常情况
-      console.error(`登录SQL 查询失败: ${err}`);
-      return res.status(500).json({ message: "登录服务器出错" + err.message });
-    }
-  });
-};
+    });
+  };
 
-// 用户注册处理函数
-const userRegister = async (req: Request, res: Response) => {
-  const connect = await connectionMysql();
-  const { username, password } = req.body;
-  verificationFun(req, res, false, async () => {
-    // 查询数据库中是否存在该用户名
-    const sql = `SELECT * FROM users WHERE username = ?`;
-    try {
-      const result = await connect.execute(sql, [username]);
-      const users: any[] = Array.isArray(result) ? result : [result];
-      const [values, fields] = users[0];
-      if (values.length > 0) {
-        return res.status(400).json({ message: "用户名已存在！" });
-      }
-      // 使用bcrypt对密码进行加密
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-      // 将用户名和加密后的密码保存到数据库中
-      const registUser = await connect.execute(
-        "INSERT INTO users (username, password) VALUES (?, ?)",
-        [username, hashedPassword]
-      );
-      console.log("查询注册后数据库返回的数据是什么=====>", registUser);
-      const resultSetHeader = registUser[0] as ResultSetHeader;
-      const userid = resultSetHeader.insertId;
-      const userDetailsInsertResult = await connect.execute({
-        sql: "INSERT INTO user_details (userid, username, password, user_avatar_pic, user_address) VALUES (?, ?, ?, ?, ?)",
-        values: [
-          userid,
-          username,
+  // 用户重置密码处理函数
+  async useResetPassword(req: Request, res: Response) {
+    const connect = await connectionMysql();
+    const { username, password, newPassword } = req.body;
+    this.verificationFun(req, res, true, async () => {
+      // 查询数据库中是否存在该用户名
+      const sql = `SELECT * FROM users WHERE username = ?`;
+      try {
+        const result = await connect.execute(sql, [username]);
+        const users: any[] = Array.isArray(result) ? result : [result];
+        const [values, fields] = users;
+        // 如果找不到用户，返回错误信息
+        if (!values.length) {
+          return res.status(404).json({ message: "该用户不存在" });
+        }
+        // 判断输入的原始密码是否正确 使用bcrypt对输入的密码进行比较
+        const isPasswordCorrect = await bcrypt.compare(
+          password,
+          values[0].password
+        );
+        if (!isPasswordCorrect) {
+          return res.status(400).json({ message: "原始密码不正确" });
+        }
+        // 对新密码进行哈希加密
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        // 更新用户密码
+        const newSql = `UPDATE users SET password = ? WHERE userid = ?`;
+        const forgotPassword = await connect.execute(newSql, [
           hashedPassword,
-          "图片" + userid,
-          "地址" + userid,
-        ],
-      });
-      // 释放连接
-      connect.release();
-      if (registUser && userDetailsInsertResult) {
-        res.status(200).json({ code: 200, message: "注册成功！" });
+          values[0].userid,
+        ]);
+        // 释放连接
+        // connect.release();
+        if (forgotPassword) {
+          res.status(200).json({ message: "密码重置成功" });
+        }
+      } catch (error: any) {
+        console.error(error);
+        return res.status(500).json({
+          message: "忘记密码·服务器出错，请稍后再试：" + error.message,
+        });
       }
-    } catch (error: any) {
-      console.error(error);
-      return res
-        .status(500)
-        .json({ message: "注册服务器出错，请稍后再试：" + error.message });
-    }
-  });
-};
+    });
+  };
 
-// 用户重置密码处理函数
-const useResetPassword = async (req: Request, res: Response) => {
-  const connect = await connectionMysql();
-  const { username, password, newPassword } = req.body;
-  verificationFun(req, res, true, async () => {
-    // 查询数据库中是否存在该用户名
-    const sql = `SELECT * FROM users WHERE username = ?`;
-    try {
-      const result = await connect.execute(sql, [username]);
-      const users: any[] = Array.isArray(result) ? result : [result];
-      const [values, fields] = users[0];
-      // 如果找不到用户，返回错误信息
-      if (!values.length) {
-        return res.status(404).json({ message: "该用户不存在" });
-      }
-      // 判断输入的原始密码是否正确 使用bcrypt对输入的密码进行比较
-      const isPasswordCorrect = await bcrypt.compare(
-        password,
-        values[0].password
-      );
-      if (!isPasswordCorrect) {
-        return res.status(400).json({ message: "原始密码不正确" });
-      }
-      // 对新密码进行哈希加密
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(newPassword, salt);
-
-      // 更新用户密码
-      const newSql = `UPDATE users SET password = ? WHERE userid = ?`;
-      const forgotPassword = await connect.execute(newSql, [
-        hashedPassword,
-        values[0].userid,
-      ]);
-      // 释放连接
-      connect.release();
-      if (forgotPassword) {
-        res.status(200).json({ message: "密码重置成功" });
-      }
-    } catch (error: any) {
-      console.error(error);
-      return res.status(500).json({
-        message: "忘记密码·服务器出错，请稍后再试：" + error.message,
-      });
+  // 校验账号、密码的公用方法。
+  verificationFun(
+    req: Request,
+    res: Response,
+    isforgotPassword: boolean,
+    callBack: Function
+  ) {
+    const { username, password, newPassword } = req.body;
+    // 检查参数是否合法
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
-  });
-};
-
-// 校验账号、密码的公用方法。
-function verificationFun(
-  req: Request,
-  res: Response,
-  isforgotPassword: boolean,
-  callBack: Function
-) {
-  const { username, password, newPassword } = req.body;
-  // 检查参数是否合法
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-  if (!username || !password) {
-    if (isforgotPassword && !newPassword) {
-      return res
-        .status(400)
-        .json({ message: "用户名、密码、新密码不能为空！" });
-    } else {
-      return res.status(400).json({ message: "用户名和密码不能为空！" });
+    if (!username || !password) {
+      if (isforgotPassword && !newPassword) {
+        return res
+          .status(400)
+          .json({ message: "用户名、密码、新密码不能为空！" });
+      } else {
+        return res.status(400).json({ message: "用户名和密码不能为空！" });
+      }
     }
-  }
-  if (username.length > 10 || password.length > 10) {
-    if (isforgotPassword && !newPassword) {
-      return res
-        .status(400)
-        .json({ message: "用户名、密码、新密码超过10个字符，请重新输入！" });
-    } else {
-      return res
-        .status(400)
-        .json({ message: "用户名和密码超过10个字符，请重新输入！" });
+    if (username.length > 10 || password.length > 10) {
+      if (isforgotPassword && !newPassword) {
+        return res
+          .status(400)
+          .json({ message: "用户名、密码、新密码超过10个字符，请重新输入！" });
+      } else {
+        return res
+          .status(400)
+          .json({ message: "用户名和密码超过10个字符，请重新输入！" });
+      }
     }
+    callBack();
   }
-  callBack();
 }
 
-export {
-  userLogin, // 用户登录的处理函数
-  userRegister, // 用户注册的处理函数
-  useResetPassword, // 用户重置密码的处理函数
-};
+
+export default new userController();

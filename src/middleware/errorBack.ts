@@ -9,10 +9,13 @@ module.exports = (validator: { run: (arg0: any) => any }[]) => {
         validator.run(req)
       )
     );
-    const errors :ValidationError[] = validationResult(req).array();
+    const errors: ValidationError[] = validationResult(req).array();
     if (errors.length > 0) {
-      return res.status(401).json(errors[0]);
+      const { value, msg, param, location } = errors[0];
+      return res.status(401).json({
+        message: `参数：${param}、值：${value}、错误信息：${msg}`,
+      });
     }
-    next();
+    await next();
   };
 };

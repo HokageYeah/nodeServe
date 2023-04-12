@@ -100,6 +100,7 @@ class userController {
           user_address: "地址" + userid,
         });
         if (registUser && userDetailsInsertResult) {
+          // res.send({ code: 400, message: "注册成功！", data: resultSetHeader });
           res
             .status(200)
             .json({ code: 200, message: "注册成功！", data: resultSetHeader });

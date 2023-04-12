@@ -1,7 +1,7 @@
 import express from "express";
 import userController from "@/router_handler/user_handler";
 import { Router } from "express";
-import { validatorAry } from "@/schema/users-article";
+import { validatorAry } from "@/middleware/users-article";
 // const validatorAry = require("@/schema/users-article");
 // 定义接口路径前缀
 const apiPrefix = "/user";

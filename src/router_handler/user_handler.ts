@@ -14,34 +14,25 @@ import { body, validationResult } from "express-validator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { ResultSetHeader } from "mysql2";
+import User_DBService from "@/service/user_service";
 
 // 导入配置文件
 const config = require("@/tools/confi-jwt");
 class userController {
   // 用户登录的处理函数
   async userLogin(req: Request, res: Response) {
-    const connect = await connectionMysql();
-    console.log(req.ip, "login=============>IP");
-    console.log(this, "login查看this指向=============>this");
     const { username, password } = req.body;
     // 检查参数是否合法
     this.verificationFun(req, res, false, async () => {
       console.log("我是校验通过后才能执行的文字");
-      // 查询数据库中是否存在该用户名
-      const sql = `SELECT * FROM users WHERE username = ?`;
       try {
-        const result = await connect.execute(sql, [username]);
-        // 释放连接
-        // connect.release();
+        // 查询数据库中是否存在该用户名
+        const result = await User_DBService.queryUser({ username, password });
         const users: any[] = Array.isArray(result) ? result : [result];
         const [values, fields] = users;
         if (values.length === 0) {
           return res.status(400).json({ message: "用户名或密码无效!!!" });
         }
-        console.log(
-          "values查看请求参数是什么============>：新的",
-          values[0].password,
-        );
         console.log("password查看请求参数是什么============>：", password);
         // 使用bcrypt对输入的密码进行比较
         const isMatch = await bcrypt.compare(password, values[0].password);
@@ -63,25 +54,28 @@ class userController {
           status: 200,
           message: "登录成功！",
           // 为了方便客户端使用 Token，在服务器端直接拼接上 Bearer 的前缀
-          data: "Bearer " + tokenStr,
+          data: {
+            ...user,
+            token: "Bearer " + tokenStr,
+          },
         });
       } catch (err: any) {
         // 处理异常情况
         console.error(`登录SQL 查询失败: ${err}`);
-        return res.status(500).json({ message: "登录服务器出错" + err.message });
+        return res
+          .status(500)
+          .json({ message: "登录服务器出错" + err.message });
       }
     });
-  };
+  }
 
   // 用户注册处理函数
   async userRegister(req: Request, res: Response) {
-    const connect = await connectionMysql();
     const { username, password } = req.body;
     this.verificationFun(req, res, false, async () => {
-      // 查询数据库中是否存在该用户名
-      const sql = `SELECT * FROM users WHERE username = ?`;
       try {
-        const result = await connect.execute(sql, [username]);
+        // 查询数据库中是否存在该用户名
+        const result = await User_DBService.queryUser({ username, password });
         const users: any[] = Array.isArray(result) ? result : [result];
         const [values, fields] = users;
         if (values.length > 0) {
@@ -91,27 +85,24 @@ class userController {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
         // 将用户名和加密后的密码保存到数据库中
-        const registUser = await connect.execute(
-          "INSERT INTO users (username, password) VALUES (?, ?)",
-          [username, hashedPassword]
-        );
+        const registUser = await User_DBService.createUser({
+          username,
+          password: hashedPassword,
+        });
         console.log("查询注册后数据库返回的数据是什么=====>", registUser);
         const resultSetHeader = registUser[0] as ResultSetHeader;
         const userid = resultSetHeader.insertId;
-        const userDetailsInsertResult = await connect.execute({
-          sql: "INSERT INTO user_details (userid, username, password, user_avatar_pic, user_address) VALUES (?, ?, ?, ?, ?)",
-          values: [
-            userid,
-            username,
-            hashedPassword,
-            "图片" + userid,
-            "地址" + userid,
-          ],
+        const userDetailsInsertResult = await User_DBService.createUserDetails({
+          userid,
+          username,
+          password: hashedPassword,
+          user_avatar_pic: "图片" + userid,
+          user_address: "地址" + userid,
         });
-        // 释放连接
-        // connect.release();
         if (registUser && userDetailsInsertResult) {
-          res.status(200).json({ code: 200, message: "注册成功！" });
+          res
+            .status(200)
+            .json({ code: 200, message: "注册成功！", data: resultSetHeader });
         }
       } catch (error: any) {
         console.error(error);
@@ -120,17 +111,15 @@ class userController {
           .json({ message: "注册服务器出错，请稍后再试：" + error.message });
       }
     });
-  };
+  }
 
   // 用户重置密码处理函数
   async useResetPassword(req: Request, res: Response) {
-    const connect = await connectionMysql();
     const { username, password, newPassword } = req.body;
     this.verificationFun(req, res, true, async () => {
-      // 查询数据库中是否存在该用户名
-      const sql = `SELECT * FROM users WHERE username = ?`;
       try {
-        const result = await connect.execute(sql, [username]);
+        // 查询数据库中是否存在该用户名
+        const result = await User_DBService.queryUser({ username, password });
         const users: any[] = Array.isArray(result) ? result : [result];
         const [values, fields] = users;
         // 如果找不到用户，返回错误信息
@@ -150,13 +139,11 @@ class userController {
         const hashedPassword = await bcrypt.hash(newPassword, salt);
 
         // 更新用户密码
-        const newSql = `UPDATE users SET password = ? WHERE userid = ?`;
-        const forgotPassword = await connect.execute(newSql, [
-          hashedPassword,
-          values[0].userid,
-        ]);
-        // 释放连接
-        // connect.release();
+        const forgotPassword = await User_DBService.modifyUser({
+          username,
+          password: hashedPassword,
+          userid: values[0].userid,
+        });
         if (forgotPassword) {
           res.status(200).json({ message: "密码重置成功" });
         }
@@ -167,7 +154,7 @@ class userController {
         });
       }
     });
-  };
+  }
 
   // 校验账号、密码的公用方法。
   verificationFun(
@@ -205,6 +192,5 @@ class userController {
     callBack();
   }
 }
-
 
 export default new userController();

@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 // pm2 start npm --name nodeServe -- run start --watch (这个命令会用pm2去执行管理node，并且会运行package.json中定义的start脚本
 // "start": "pm2 start src/main.ts --interpreter /Users/yuye/.nvm/versions/node/v14.21.2/bin/ts-node --watch", 这个方法无法管理@符号后面的内容。
 // 这个问题可能是由于在使用 pm2 运行项目时没有正确设置 tsconfig-paths 的原因导致的。可以按照以下步骤来解决：
@@ -15,15 +15,16 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { ResultSetHeader } from "mysql2";
 import User_DBService from "@/service/user_service";
+import { successResponse } from "@/tools/handle-error";
 
 // 导入配置文件
 const config = require("@/tools/confi-jwt");
 class userController {
   // 用户登录的处理函数
-  async userLogin(req: Request, res: Response) {
+  async userLogin(req: Request, res: Response, next: NextFunction) {
     const { username, password } = req.body;
     // 检查参数是否合法
-    this.verificationFun(req, res, false, async () => {
+    this.verificationFun(req, res, next, false, async () => {
       console.log("我是校验通过后才能执行的文字");
       try {
         // 查询数据库中是否存在该用户名
@@ -31,14 +32,16 @@ class userController {
         const users: any[] = Array.isArray(result) ? result : [result];
         const [values, fields] = users;
         if (values.length === 0) {
-          return res.status(400).json({ message: "用户名或密码无效!!!" });
+          next({ message: "用户名或密码无效!!!", code: 400 });
+          return;
         }
         console.log("password查看请求参数是什么============>：", password);
         // 使用bcrypt对输入的密码进行比较
         const isMatch = await bcrypt.compare(password, values[0].password);
         console.log("查看一下数据isMatch：====>：", isMatch);
         if (!isMatch) {
-          return res.status(400).json({ message: "用户名或密码错误!!!!" });
+          next({ message: "用户名或密码错误了！！", code: 400 });
+          return;
         }
         // 生成JWT令牌
         // 生成 Token 字符串
@@ -50,36 +53,31 @@ class userController {
           algorithm: "HS256", //设置签名算法
         });
         console.log("查看一下数据tokenStr：====>：", tokenStr);
-        res.send({
-          status: 200,
-          message: "登录成功！",
-          // 为了方便客户端使用 Token，在服务器端直接拼接上 Bearer 的前缀
-          data: {
-            ...user,
-            token: "Bearer " + tokenStr,
-          },
+        successResponse(res, {
+          ...user,
+          token: "Bearer " + tokenStr,
         });
       } catch (err: any) {
         // 处理异常情况
         console.error(`登录SQL 查询失败: ${err}`);
-        return res
-          .status(500)
-          .json({ message: "登录服务器出错" + err.message });
+        next({ message: "登录服务器出错" + err.message, code: 500 });
+        return;
       }
     });
   }
 
   // 用户注册处理函数
-  async userRegister(req: Request, res: Response) {
+  async userRegister(req: Request, res: Response, next: NextFunction) {
     const { username, password } = req.body;
-    this.verificationFun(req, res, false, async () => {
+    this.verificationFun(req, res, next, false, async () => {
       try {
         // 查询数据库中是否存在该用户名
         const result = await User_DBService.queryUser({ username, password });
         const users: any[] = Array.isArray(result) ? result : [result];
         const [values, fields] = users;
         if (values.length > 0) {
-          return res.status(400).json({ message: "用户名已存在！" });
+          next({ message: "用户名已存在！", code: 400 });
+          return;
         }
         // 使用bcrypt对密码进行加密
         const salt = await bcrypt.genSalt(10);
@@ -101,23 +99,23 @@ class userController {
         });
         if (registUser && userDetailsInsertResult) {
           // res.send({ code: 400, message: "注册成功！", data: resultSetHeader });
-          res
-            .status(200)
-            .json({ code: 200, message: "注册成功！", data: resultSetHeader });
+          successResponse(res, resultSetHeader);
         }
       } catch (error: any) {
         console.error(error);
-        return res
-          .status(500)
-          .json({ message: "注册服务器出错，请稍后再试：" + error.message });
+        next({
+          message: "注册服务器出错，请稍后再试：" + error.message,
+          code: 500,
+        });
+        return;
       }
     });
   }
 
   // 用户重置密码处理函数
-  async useResetPassword(req: Request, res: Response) {
+  async useResetPassword(req: Request, res: Response, next: NextFunction) {
     const { username, password, newPassword } = req.body;
-    this.verificationFun(req, res, true, async () => {
+    this.verificationFun(req, res, next, true, async () => {
       try {
         // 查询数据库中是否存在该用户名
         const result = await User_DBService.queryUser({ username, password });
@@ -125,7 +123,8 @@ class userController {
         const [values, fields] = users;
         // 如果找不到用户，返回错误信息
         if (!values.length) {
-          return res.status(404).json({ message: "该用户不存在" });
+          next({ message: "该用户不存在", code: 400 });
+          return;
         }
         // 判断输入的原始密码是否正确 使用bcrypt对输入的密码进行比较
         const isPasswordCorrect = await bcrypt.compare(
@@ -133,7 +132,8 @@ class userController {
           values[0].password
         );
         if (!isPasswordCorrect) {
-          return res.status(400).json({ message: "原始密码不正确" });
+          next({ message: "原始密码不正确", code: 400 });
+          return;
         }
         // 对新密码进行哈希加密
         const salt = await bcrypt.genSalt(10);
@@ -146,13 +146,15 @@ class userController {
           userid: values[0].userid,
         });
         if (forgotPassword) {
-          res.status(200).json({ message: "密码重置成功" });
+          successResponse(res, { message: "密码重置成功" });
         }
       } catch (error: any) {
         console.error(error);
-        return res.status(500).json({
+        next({
           message: "忘记密码·服务器出错，请稍后再试：" + error.message,
+          code: 500,
         });
+        return;
       }
     });
   }
@@ -161,6 +163,7 @@ class userController {
   verificationFun(
     req: Request,
     res: Response,
+    next: NextFunction,
     isforgotPassword: boolean,
     callBack: Function
   ) {
@@ -168,26 +171,37 @@ class userController {
     // 检查参数是否合法
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      next({ code: 400, message: errors.array() });
+      return;
     }
     if (!username || !password) {
       if (isforgotPassword && !newPassword) {
-        return res
-          .status(400)
-          .json({ message: "用户名、密码、新密码不能为空！" });
+        next({
+          message: "用户名、密码、新密码不能为空！",
+          code: 400,
+        });
+        return;
       } else {
-        return res.status(400).json({ message: "用户名和密码不能为空！" });
+        next({
+          message: "用户名和密码不能为空！",
+          code: 400,
+        });
+        return;
       }
     }
     if (username.length > 10 || password.length > 10) {
       if (isforgotPassword && !newPassword) {
-        return res
-          .status(400)
-          .json({ message: "用户名、密码、新密码超过10个字符，请重新输入！" });
+        next({
+          message: "用户名、密码、新密码超过10个字符，请重新输入！",
+          code: 400,
+        });
+        return;
       } else {
-        return res
-          .status(400)
-          .json({ message: "用户名和密码超过10个字符，请重新输入！" });
+        next({
+          message: "用户名和密码超过10个字符，请重新输入！",
+          code: 400,
+        });
+        return;
       }
     }
     callBack();

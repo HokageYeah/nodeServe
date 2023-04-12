@@ -12,9 +12,8 @@ module.exports = (validator: { run: (arg0: any) => any }[]) => {
     const errors: ValidationError[] = validationResult(req).array();
     if (errors.length > 0) {
       const { value, msg, param, location } = errors[0];
-      return res.status(401).json({
-        message: `参数：${param}、值：${value}、错误信息：${msg}`,
-      });
+      next({ code: 401, message: `参数：${param}、值：${value}、错误信息：${msg}`})
+      return;
     }
     await next();
   };

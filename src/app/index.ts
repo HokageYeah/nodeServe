@@ -5,12 +5,14 @@ import { expressjwt } from "express-jwt"; // 解析 token 的中间件
 import path from "path";
 import { userRouter } from "@/router/user";
 import { userInfoRouter } from "@/router/user-info";
-import  bodyParser from "body-parser";
+import bodyParser from "body-parser";
+import { errorResponse } from "@/tools/handle-error";
+import { ResponseData } from "@/libcommon/index";
 
 // 导入jwt配置文件(密钥)
 const config = require("@/tools/confi-jwt");
 // 创建app
-const app :Express = express();
+const app: Express = express();
 // 使用 .unless({ path: [/^\/api\//] }) 指定哪些接口不需要进行 Token 的身份认证
 app.use(
   expressjwt({ secret: config.jwtSecretKey, algorithms: ["HS256"] }).unless({
@@ -50,13 +52,14 @@ app.get("/api/index", (req: Request, res: Response) => {
 app.use("/api", userRouter);
 app.use("/permissions", userInfoRouter);
 // 错误中间件
-app.use(function (err: Error, req: Request, res: Response, next: NextFunction) {
+app.use(function (err: ResponseData, req: Request, res: Response, next: NextFunction) {
   // token 解析失败导致的错误
   if (err.name === "UnauthorizedError") {
     return res.send({ status: 401, message: "Invalid token(无效的token)" });
   }
+  errorResponse(err.message, err.code, res);
   // 其他原因导致的错误
-  res.send({ status: 500, message: "Unknown error(未知错误)" });
+  // res.send({ status: 500, message: "Unknown error(未知错误)" });
 });
 
 export default app;

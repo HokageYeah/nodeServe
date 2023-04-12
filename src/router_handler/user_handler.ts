@@ -50,7 +50,7 @@ class userController {
         console.log("查看user中都有哪些数据======>", user);
         const tokenStr = jwt.sign(user, config.jwtSecretKey, {
           expiresIn: 60 * 10, // token 有效期为 10 个小时 数字为秒s
-          algorithm: "HS256", //设置签名算法
+          algorithm: "HS256", //设置签名算法 HS256 对称加密
         });
         console.log("查看一下数据tokenStr：====>：", tokenStr);
         return successResponse(res, {

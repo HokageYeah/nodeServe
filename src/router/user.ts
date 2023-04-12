@@ -21,5 +21,8 @@ userRouter.post(apiPrefix + "/register", validatorAry, userController.userRegist
 // 重置密码
 userRouter.post(apiPrefix + "/reset-password", validatorAry, userController.useResetPassword.bind(userController));
 
+// 退出登录
+userRouter.post(apiPrefix + "/logout", userController.userLogout);
+
 // 将路由对象共享出去
 export { userRouter };

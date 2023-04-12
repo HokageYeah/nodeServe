@@ -32,7 +32,7 @@ class userController {
         const users: any[] = Array.isArray(result) ? result : [result];
         const [values, fields] = users;
         if (values.length === 0) {
-          next({ message: "用户名或密码无效!!!", code: 400 });
+          await next({ message: "用户名或密码无效!!!", code: 400 });
           return;
         }
         console.log("password查看请求参数是什么============>：", password);
@@ -40,7 +40,7 @@ class userController {
         const isMatch = await bcrypt.compare(password, values[0].password);
         console.log("查看一下数据isMatch：====>：", isMatch);
         if (!isMatch) {
-          next({ message: "用户名或密码错误了！！", code: 400 });
+          await next({ message: "用户名或密码错误了！！", code: 400 });
           return;
         }
         // 生成JWT令牌
@@ -49,18 +49,18 @@ class userController {
         const user = { ...values[0], password: "" };
         console.log("查看user中都有哪些数据======>", user);
         const tokenStr = jwt.sign(user, config.jwtSecretKey, {
-          expiresIn: "10h", // token 有效期为 10 个小时
+          expiresIn: 60 * 10, // token 有效期为 10 个小时 数字为秒s
           algorithm: "HS256", //设置签名算法
         });
         console.log("查看一下数据tokenStr：====>：", tokenStr);
-        successResponse(res, {
+        return successResponse(res, {
           ...user,
           token: "Bearer " + tokenStr,
         });
       } catch (err: any) {
         // 处理异常情况
         console.error(`登录SQL 查询失败: ${err}`);
-        next({ message: "登录服务器出错" + err.message, code: 500 });
+        await next({ message: "登录服务器出错" + err.message, code: 500 });
         return;
       }
     });
@@ -76,7 +76,7 @@ class userController {
         const users: any[] = Array.isArray(result) ? result : [result];
         const [values, fields] = users;
         if (values.length > 0) {
-          next({ message: "用户名已存在！", code: 400 });
+          await next({ message: "用户名已存在！", code: 400 });
           return;
         }
         // 使用bcrypt对密码进行加密
@@ -99,11 +99,11 @@ class userController {
         });
         if (registUser && userDetailsInsertResult) {
           // res.send({ code: 400, message: "注册成功！", data: resultSetHeader });
-          successResponse(res, resultSetHeader);
+          return successResponse(res, resultSetHeader);
         }
       } catch (error: any) {
         console.error(error);
-        next({
+        await next({
           message: "注册服务器出错，请稍后再试：" + error.message,
           code: 500,
         });
@@ -123,7 +123,7 @@ class userController {
         const [values, fields] = users;
         // 如果找不到用户，返回错误信息
         if (!values.length) {
-          next({ message: "该用户不存在", code: 400 });
+          await next({ message: "该用户不存在", code: 400 });
           return;
         }
         // 判断输入的原始密码是否正确 使用bcrypt对输入的密码进行比较
@@ -132,7 +132,7 @@ class userController {
           values[0].password
         );
         if (!isPasswordCorrect) {
-          next({ message: "原始密码不正确", code: 400 });
+          await next({ message: "原始密码不正确", code: 400 });
           return;
         }
         // 对新密码进行哈希加密
@@ -146,11 +146,11 @@ class userController {
           userid: values[0].userid,
         });
         if (forgotPassword) {
-          successResponse(res, { message: "密码重置成功" });
+          return successResponse(res, { message: "密码重置成功" });
         }
       } catch (error: any) {
         console.error(error);
-        next({
+        await next({
           message: "忘记密码·服务器出错，请稍后再试：" + error.message,
           code: 500,
         });
@@ -159,8 +159,35 @@ class userController {
     });
   }
 
+  // 退出登录
+  async userLogout(req: Request, res: Response, next: NextFunction) {
+    // 将 token 添加到黑名单中
+    // 由于 JWT 的无法撤回性，所以我们将 token 添加到黑名单中，
+    // 以确保该 token 在有效期内无法再次使用。
+    // 通常情况下，这个黑名单应该存在数据库中，而不是数组中。
+    // 在这里我们使用一个全局变量模拟一个黑名单。
+    try {
+      // 从请求头中获取 token
+      console.log('从请求头中获取token =====>？？？？？');
+      const token = req.headers.authorization?.split(" ")[1] || req.cookies.JWT;
+      console.log('从请求头中获取token =====>', token);
+      if (!token) {
+        await next({
+          message: "token已经删除，已退出！",
+          code: 500
+        })
+        return;
+      }
+      res.clearCookie("token");
+      return successResponse(res, { message: "退出登录成功", token })
+    } catch (error) {
+      await next({ message: "退出登录服务失败", code: 500 })
+      return;
+    }
+  }
+
   // 校验账号、密码的公用方法。
-  verificationFun(
+  async verificationFun(
     req: Request,
     res: Response,
     next: NextFunction,
@@ -171,18 +198,18 @@ class userController {
     // 检查参数是否合法
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      next({ code: 400, message: errors.array() });
+      await next({ code: 400, message: errors.array() });
       return;
     }
     if (!username || !password) {
       if (isforgotPassword && !newPassword) {
-        next({
+        await next({
           message: "用户名、密码、新密码不能为空！",
           code: 400,
         });
         return;
       } else {
-        next({
+        await next({
           message: "用户名和密码不能为空！",
           code: 400,
         });
@@ -191,13 +218,13 @@ class userController {
     }
     if (username.length > 10 || password.length > 10) {
       if (isforgotPassword && !newPassword) {
-        next({
+        await next({
           message: "用户名、密码、新密码超过10个字符，请重新输入！",
           code: 400,
         });
         return;
       } else {
-        next({
+        await next({
           message: "用户名和密码超过10个字符，请重新输入！",
           code: 400,
         });

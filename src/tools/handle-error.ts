@@ -7,7 +7,8 @@ import {
   PASSWORD_IS_WRONG,
   ORIGINAL_PASSWORD_IS_WRONG,
   TOKEN_DELETED,
-  SERVER_ERROR
+  SERVER_ERROR,
+  UNAUTHORIZED_ERROR
 }
   from '@/config/error'
 
@@ -42,6 +43,9 @@ function codeMessage(codeName: string, messageName?: string) {
     case SERVER_ERROR:
       code = -1007
       message += '服务器出错，请稍后再试!'
+    case UNAUTHORIZED_ERROR:
+      code = -1008
+      message += 'Invalid token(无效的token)!'
     default:
       break;
   }

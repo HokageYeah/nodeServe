@@ -8,7 +8,7 @@ import { userInfoRouter } from "@/router/user-info";
 import bodyParser from "body-parser";
 import { errorResponse } from "@/tools/handle-error";
 import { publicKey } from "@/jwt-keys/private_public_path";
-
+import { UNAUTHORIZED_ERROR } from '@/config/error'
 
 // 导入jwt配置文件(密钥)
 const config = require("@/tools/confi-jwt");
@@ -62,8 +62,8 @@ app.use(function (
     next: NextFunction
 ) {
     // token 解析失败导致的错误
-    if (err.name === "UnauthorizedError") {
-        return res.send({ status: 401, message: "Invalid token(无效的token)" });
+    if (err.name === UNAUTHORIZED_ERROR) {
+        err.code = err.name
     }
     errorResponse(res, err.code, err.message);
     // 其他原因导致的错误

@@ -59,7 +59,7 @@ class userController {
         // 剔除完毕之后，user 中只保留了用户的 id, username, nickname, email 这四个属性的值
         const user = { ...values[0], password: "" };
         const tokenStr = jwt.sign(user, privateKey, {
-          expiresIn: 60 * 10, // token 有效期为 10 个小时 数字为秒s
+          expiresIn: 60 * 10, // token 有效期为 10分钟  数字为秒s
           // algorithm: "HS256", //设置签名算法 HS256:对称加密
           algorithm: "RS256", // RS256:非对称加密
         });

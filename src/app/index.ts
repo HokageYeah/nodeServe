@@ -8,14 +8,18 @@ import { userInfoRouter } from "@/router/user-info";
 import bodyParser from "body-parser";
 import { errorResponse } from "@/tools/handle-error";
 import { ResponseData } from "@/libcommon/index";
+import { publicKey } from "@/jwt-keys/private_public_path";
+
 
 // 导入jwt配置文件(密钥)
 const config = require("@/tools/confi-jwt");
 // 创建app
 const app: Express = express();
 // 使用 .unless({ path: [/^\/api\//] }) 指定哪些接口不需要进行 Token 的身份认证
+//设置签名算法 HS256:对称加密
+// RS256:非对称加密
 app.use(
-  expressjwt({ secret: config.jwtSecretKey, algorithms: ["HS256"] }).unless({
+  expressjwt({ secret: publicKey, algorithms: ["RS256"] }).unless({
     path: [/^\/api\//],
   })
 );
@@ -52,7 +56,12 @@ app.get("/api/index", (req: Request, res: Response) => {
 app.use("/api", userRouter);
 app.use("/permissions", userInfoRouter);
 // 错误中间件
-app.use(function (err: ResponseData, req: Request, res: Response, next: NextFunction) {
+app.use(function (
+  err: ResponseData,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   // token 解析失败导致的错误
   if (err.name === "UnauthorizedError") {
     return res.send({ status: 401, message: "Invalid token(无效的token)" });

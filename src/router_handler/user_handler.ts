@@ -16,6 +16,8 @@ import jwt from "jsonwebtoken";
 import { ResultSetHeader } from "mysql2";
 import User_DBService from "@/service/user_service";
 import { successResponse } from "@/tools/handle-error";
+import { privateKey } from "@/jwt-keys/private_public_path";
+
 
 // 导入配置文件
 const config = require("@/tools/confi-jwt");
@@ -47,10 +49,10 @@ class userController {
         // 生成 Token 字符串
         // 剔除完毕之后，user 中只保留了用户的 id, username, nickname, email 这四个属性的值
         const user = { ...values[0], password: "" };
-        console.log("查看user中都有哪些数据======>", user);
-        const tokenStr = jwt.sign(user, config.jwtSecretKey, {
+        const tokenStr = jwt.sign(user, privateKey, {
           expiresIn: 60 * 10, // token 有效期为 10 个小时 数字为秒s
-          algorithm: "HS256", //设置签名算法 HS256 对称加密
+          // algorithm: "HS256", //设置签名算法 HS256:对称加密
+          algorithm: "RS256", // RS256:非对称加密
         });
         console.log("查看一下数据tokenStr：====>：", tokenStr);
         return successResponse(res, {
@@ -168,20 +170,20 @@ class userController {
     // 在这里我们使用一个全局变量模拟一个黑名单。
     try {
       // 从请求头中获取 token
-      console.log('从请求头中获取token =====>？？？？？');
+      console.log("从请求头中获取token =====>？？？？？");
       const token = req.headers.authorization?.split(" ")[1] || req.cookies.JWT;
-      console.log('从请求头中获取token =====>', token);
+      console.log("从请求头中获取token =====>", token);
       if (!token) {
         await next({
           message: "token已经删除，已退出！",
-          code: 500
-        })
+          code: 500,
+        });
         return;
       }
       res.clearCookie("token");
-      return successResponse(res, { message: "退出登录成功", token })
+      return successResponse(res, { message: "退出登录成功", token });
     } catch (error) {
-      await next({ message: "退出登录服务失败", code: 500 })
+      await next({ message: "退出登录服务失败", code: 500 });
       return;
     }
   }

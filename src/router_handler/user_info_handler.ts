@@ -8,7 +8,7 @@ const getUserInfo = (req: AuthenticatedRequest, res: Response) => {
   // 你可以创建一个 custom.d.ts 文件，然后将以下内容添加到该文件中
   // 然后将 custom.d.ts 文件导入到你的应用程序中即可：
   //   const userInfo: Express.Request["user"] = req.user;
-  console.log("查看解析出来的用户信息是什么=====>", req?.auth);
+  console.log("查看解析出来的用户信息是什么(新的)=====>", req?.auth);
   res.send({
     status: 200,
     message: "获取用户信息成功！",

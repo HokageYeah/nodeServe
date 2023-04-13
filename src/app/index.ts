@@ -3,12 +3,14 @@ import { Request, Response, NextFunction, Express } from "express";
 import yyconnection from "@/tools/mysql_db";
 import { expressjwt } from "express-jwt"; // 解析 token 的中间件
 import path from "path";
-import { userRouter } from "@/router/user";
-import { userInfoRouter } from "@/router/user-info";
+import { userRouter } from "@/router/user-router";
+import { userInfoRouter } from "@/router/user-info-router";
 import bodyParser from "body-parser";
 import { errorResponse } from "@/tools/handle-error";
 import { publicKey } from "@/jwt-keys/private_public_path";
 import { UNAUTHORIZED_ERROR } from '@/config/error'
+// 动态导入路由文件
+import registerRouters from '@/router/index'
 
 // 导入jwt配置文件(密钥)
 const config = require("@/tools/confi-jwt");
@@ -54,6 +56,9 @@ app.get("/api/index", (req: Request, res: Response) => {
 // api接口是不需要token验证的 其他接口需要
 app.use("/api", userRouter);
 app.use("/permissions", userInfoRouter);
+// 上面的方法需要一个个的导入路有，改为动态导入路由
+registerRouters(app);
+
 // 错误中间件
 app.use(function (
     err: any,

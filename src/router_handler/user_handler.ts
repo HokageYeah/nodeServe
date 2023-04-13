@@ -17,7 +17,16 @@ import { ResultSetHeader } from "mysql2";
 import User_DBService from "@/service/user_service";
 import { successResponse } from "@/tools/handle-error";
 import { privateKey } from "@/jwt-keys/private_public_path";
-
+import {
+  NAME_OR_PASSWORD_IS_ERROR,
+  NAME_IS_ALREADY_EXISTS,
+  NAME_OR_PASSWORD_UNREGISTERED,
+  PASSWORD_IS_WRONG,
+  ORIGINAL_PASSWORD_IS_WRONG,
+  TOKEN_DELETED,
+  SERVER_ERROR
+}
+  from '@/config/error'
 
 // 导入配置文件
 const config = require("@/tools/confi-jwt");
@@ -34,7 +43,7 @@ class userController {
         const users: any[] = Array.isArray(result) ? result : [result];
         const [values, fields] = users;
         if (values.length === 0) {
-          await next({ message: "用户名或密码无效!!!", code: 400 });
+          await next({ code: NAME_OR_PASSWORD_UNREGISTERED });
           return;
         }
         console.log("password查看请求参数是什么============>：", password);
@@ -42,7 +51,7 @@ class userController {
         const isMatch = await bcrypt.compare(password, values[0].password);
         console.log("查看一下数据isMatch：====>：", isMatch);
         if (!isMatch) {
-          await next({ message: "用户名或密码错误了！！", code: 400 });
+          await next({ code: PASSWORD_IS_WRONG });
           return;
         }
         // 生成JWT令牌
@@ -62,7 +71,7 @@ class userController {
       } catch (err: any) {
         // 处理异常情况
         console.error(`登录SQL 查询失败: ${err}`);
-        await next({ message: "登录服务器出错" + err.message, code: 500 });
+        await next({ code: SERVER_ERROR });
         return;
       }
     });
@@ -78,7 +87,7 @@ class userController {
         const users: any[] = Array.isArray(result) ? result : [result];
         const [values, fields] = users;
         if (values.length > 0) {
-          await next({ message: "用户名已存在！", code: 400 });
+          await next({ code: NAME_IS_ALREADY_EXISTS });
           return;
         }
         // 使用bcrypt对密码进行加密
@@ -105,10 +114,7 @@ class userController {
         }
       } catch (error: any) {
         console.error(error);
-        await next({
-          message: "注册服务器出错，请稍后再试：" + error.message,
-          code: 500,
-        });
+        await next({ code: SERVER_ERROR });
         return;
       }
     });
@@ -125,7 +131,7 @@ class userController {
         const [values, fields] = users;
         // 如果找不到用户，返回错误信息
         if (!values.length) {
-          await next({ message: "该用户不存在", code: 400 });
+          await next({ code: NAME_OR_PASSWORD_UNREGISTERED });
           return;
         }
         // 判断输入的原始密码是否正确 使用bcrypt对输入的密码进行比较
@@ -134,7 +140,7 @@ class userController {
           values[0].password
         );
         if (!isPasswordCorrect) {
-          await next({ message: "原始密码不正确", code: 400 });
+          await next({ code: ORIGINAL_PASSWORD_IS_WRONG });
           return;
         }
         // 对新密码进行哈希加密
@@ -152,10 +158,7 @@ class userController {
         }
       } catch (error: any) {
         console.error(error);
-        await next({
-          message: "忘记密码·服务器出错，请稍后再试：" + error.message,
-          code: 500,
-        });
+        await next({ code: SERVER_ERROR });
         return;
       }
     });
@@ -174,16 +177,13 @@ class userController {
       const token = req.headers.authorization?.split(" ")[1] || req.cookies.JWT;
       console.log("从请求头中获取token =====>", token);
       if (!token) {
-        await next({
-          message: "token已经删除，已退出！",
-          code: 500,
-        });
+        await next({ code: TOKEN_DELETED });
         return;
       }
       res.clearCookie("token");
       return successResponse(res, { message: "退出登录成功", token });
     } catch (error) {
-      await next({ message: "退出登录服务失败", code: 500 });
+      await next({ code: SERVER_ERROR });
       return;
     }
   }
@@ -207,13 +207,13 @@ class userController {
       if (isforgotPassword && !newPassword) {
         await next({
           message: "用户名、密码、新密码不能为空！",
-          code: 400,
+          code: NAME_OR_PASSWORD_IS_ERROR,
         });
         return;
       } else {
         await next({
           message: "用户名和密码不能为空！",
-          code: 400,
+          code: NAME_OR_PASSWORD_IS_ERROR,
         });
         return;
       }
@@ -222,13 +222,13 @@ class userController {
       if (isforgotPassword && !newPassword) {
         await next({
           message: "用户名、密码、新密码超过10个字符，请重新输入！",
-          code: 400,
+          code: NAME_OR_PASSWORD_IS_ERROR,
         });
         return;
       } else {
         await next({
           message: "用户名和密码超过10个字符，请重新输入！",
-          code: 400,
+          code: NAME_OR_PASSWORD_IS_ERROR,
         });
         return;
       }
@@ -238,3 +238,4 @@ class userController {
 }
 
 export default new userController();
+// module.exports = new userController();

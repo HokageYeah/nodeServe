@@ -1,0 +1,7 @@
+export const NAME_OR_PASSWORD_IS_ERROR = 'name_or_password_is_error'
+export const NAME_IS_ALREADY_EXISTS = 'name_is_already_exists'
+export const NAME_OR_PASSWORD_UNREGISTERED = 'name_or_password_unregistered'
+export const PASSWORD_IS_WRONG = 'password_is_wrong'
+export const ORIGINAL_PASSWORD_IS_WRONG = 'original_password_is_wrong'
+export const TOKEN_DELETED = 'token_deleted'
+export const SERVER_ERROR = 'server_error'

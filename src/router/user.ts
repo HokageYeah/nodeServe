@@ -3,6 +3,7 @@ import userController from "@/router_handler/user_handler";
 import { Router } from "express";
 import { validatorAry } from "@/middleware/users-article";
 // const validatorAry = require("@/schema/users-article");
+// const { userLogout } = require('@/router_handler/user_handler')
 // 定义接口路径前缀
 const apiPrefix = "/user";
 // 创建路由对象

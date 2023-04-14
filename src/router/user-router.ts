@@ -1,7 +1,10 @@
 import express from "express";
 import userController from "@/router_handler/user_handler";
 import { Router } from "express";
-import { validatorAry } from "@/middleware/users-article";
+import {
+  loginValidatorAry,
+  resetPasswordValidatorAry,
+} from "@/middleware/users-article";
 // const validatorAry = require("@/schema/users-article");
 // const { userLogout } = require('@/router_handler/user_handler')
 // 定义接口路径前缀
@@ -11,27 +14,26 @@ const userRouter: Router = express.Router();
 
 // 添加 '/user' 前缀
 userRouter.use(apiPrefix, (req, res, next) => {
-  console.log("userRouter.use==========>");
   next();
 });
 // 登陆
 userRouter.post(
   apiPrefix + "/login",
-  validatorAry,
+  loginValidatorAry,
   userController.userLogin.bind(userController)
 );
 
 // 注册
 userRouter.post(
   apiPrefix + "/register",
-  validatorAry,
+  loginValidatorAry,
   userController.userRegister.bind(userController)
 );
 
 // 重置密码
 userRouter.post(
   apiPrefix + "/reset-password",
-  validatorAry,
+  resetPasswordValidatorAry,
   userController.useResetPassword.bind(userController)
 );
 
@@ -44,4 +46,4 @@ userRouter.use((req, res, next) => {
 // 将路由对象共享出去
 // 使用es6这种方式导出 有问题：错误级别的中间件无法调用到， postman报错<pre>[object Object]</pre>
 // export default userRouter;
-module.exports = userRouter
+module.exports = userRouter;

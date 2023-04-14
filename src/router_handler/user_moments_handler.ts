@@ -11,7 +11,7 @@ class UserMomentsController {
     console.log("查看解析出来的用户信息是什么(新的)=====>", req?.auth);
     // 1、获取动态内容
     const { content } = req.body;
-    successResponse(res, { message: "获取用户动态成功" });
+    successResponse(res, { message: "获取用户动态成功" + content });
   };
 }
 

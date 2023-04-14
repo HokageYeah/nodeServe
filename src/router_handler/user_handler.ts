@@ -102,6 +102,7 @@ class userController {
         console.log("查询注册后数据库返回的数据是什么=====>", registUser);
         const resultSetHeader = registUser[0] as ResultSetHeader;
         const userid = resultSetHeader.insertId;
+        // user_details这个表后续不在更新，此段插入代码后续注释掉。所有用户信息都存储在users表中。
         const userDetailsInsertResult = await User_DBService.createUserDetails({
           userid,
           username,

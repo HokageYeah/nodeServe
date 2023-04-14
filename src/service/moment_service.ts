@@ -1,0 +1,3 @@
+
+class Moment_DBService {
+}

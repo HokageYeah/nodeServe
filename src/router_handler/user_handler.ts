@@ -24,12 +24,11 @@ import {
   PASSWORD_IS_WRONG,
   ORIGINAL_PASSWORD_IS_WRONG,
   TOKEN_DELETED,
-  SERVER_ERROR
-}
-  from '@/config/error'
+  SERVER_ERROR,
+} from "@/config/error";
 
 // 导入配置文件
-const config = require("@/tools/confi-jwt");
+import { jwtSecretKey } from "@/tools/confi-jwt";
 class userController {
   // 用户登录的处理函数
   async userLogin(req: Request, res: Response, next: NextFunction) {
@@ -87,9 +86,11 @@ class userController {
         const users: any[] = Array.isArray(result) ? result : [result];
         const [values, fields] = users;
         if (values.length > 0) {
+          console.log("这个是存在用户的毁掉=========>");
           await next({ code: NAME_IS_ALREADY_EXISTS });
           return;
         }
+        console.log("这个是下一步下一步=========>");
         // 使用bcrypt对密码进行加密
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);

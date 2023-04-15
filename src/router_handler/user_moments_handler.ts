@@ -20,7 +20,9 @@ class UserMomentsController {
     // 然后将 custom.d.ts 文件导入到你的应用程序中即可：
     //   const userInfo: Express.Request["user"] = req.user;
     console.log("查看解析出来的用户信息是什么(新的)=====>", req?.auth);
-    if(!req.auth) {}
+    if(!req.auth) {
+        
+    }
     // 1、获取动态内容
     const { content } = req.body;
     successResponse(res, { message: "获取用户动态成功" + content });

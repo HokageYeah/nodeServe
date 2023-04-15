@@ -13,7 +13,13 @@ userComenrRouter.use(apiPrefix, (req, res, next) => {
 
 // 获取用户动态
 userComenrRouter.post(
-  apiPrefix + "/user-moments",
+  apiPrefix + "/get-user-moments",
+  userContentValidatorAry,
+  UserMomentsController.getUserComents
+);
+// 添加用户动态
+userComenrRouter.post(
+  apiPrefix + "/create-user-moments",
   userContentValidatorAry,
   UserMomentsController.getUserComents
 );

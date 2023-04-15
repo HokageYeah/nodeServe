@@ -34,10 +34,7 @@ class User_DBService<T> implements User_DBServiceCls<T>{
         // 拼接sql语句
         const sql = `INSERT INTO users (username, password) VALUES (?, ?)`;
         // 将用户名和加密后的密码保存到数据库中
-        const registUser = await connect.execute<ResultSetHeader>(
-            "INSERT INTO users (username, password) VALUES (?, ?)",
-            [username, password]
-        );
+        const registUser = await connect.execute<ResultSetHeader>(sql,[username, password]);
         connect.release();
         return registUser;
     }

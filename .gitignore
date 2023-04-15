@@ -4,6 +4,8 @@ node_modules
 /dist
 dist.zip
 dist_electron
+package-lock.json
+pnpm-lock.yaml
 
 # local env files
 .env.local

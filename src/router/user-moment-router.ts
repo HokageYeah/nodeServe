@@ -11,16 +11,31 @@ userComenrRouter.use(apiPrefix, (req, res, next) => {
   next();
 });
 
-// 获取用户动态
-userComenrRouter.post(
-  apiPrefix + "/get-user-moments",
-  userContentValidatorAry,
-  UserMomentsController.getUserComents
-);
 // 添加用户动态
 userComenrRouter.post(
   apiPrefix + "/create-user-moments",
   userContentValidatorAry,
-  UserMomentsController.getUserComents
+  UserMomentsController.createUserComents
 );
+// 获取用户动态列表
+userComenrRouter.post(
+  apiPrefix + "/get-user-moments",
+  UserMomentsController.getUserComentsList
+);
+// 获取用户动态详情
+userComenrRouter.post(
+  apiPrefix + "/get-user-moments-details",
+  UserMomentsController.getUserComentsDetails
+);
+// 修改用户动态 需要添加当前登陆的用户是否有操作该资源的权限
+// userComenrRouter.post(
+//   apiPrefix + "/revise-user-moments",
+//   UserMomentsController.reviseUserComents
+// );
+
+// 删除用户动态 需要添加当前登陆的用户是否有操作该资源的权限
+// userComenrRouter.post(
+//   apiPrefix + "/delete-user-moments",
+//   UserMomentsController.deleteUserComents
+// );
 module.exports = userComenrRouter;

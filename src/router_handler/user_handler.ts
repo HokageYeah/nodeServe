@@ -70,7 +70,7 @@ class userController {
       } catch (err: any) {
         // 处理异常情况
         console.error(`登录SQL 查询失败: ${err}`);
-        await next({ code: SERVER_ERROR });
+        await next({ code: SERVER_ERROR, message: err });
         return;
       }
     });
@@ -116,7 +116,7 @@ class userController {
         }
       } catch (error: any) {
         console.error(error);
-        await next({ code: SERVER_ERROR });
+        await next({ code: SERVER_ERROR, message: error });
         return;
       }
     });
@@ -160,7 +160,7 @@ class userController {
         }
       } catch (error: any) {
         console.error(error);
-        await next({ code: SERVER_ERROR });
+        await next({ code: SERVER_ERROR, message: error });
         return;
       }
     });
@@ -185,7 +185,7 @@ class userController {
       res.clearCookie("token");
       return successResponse(res, { message: "退出登录成功", token });
     } catch (error) {
-      await next({ code: SERVER_ERROR });
+      await next({ code: SERVER_ERROR, message: error });
       return;
     }
   }

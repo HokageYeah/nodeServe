@@ -8,7 +8,13 @@ import {
   ORIGINAL_PASSWORD_IS_WRONG,
   TOKEN_DELETED,
   SERVER_ERROR,
-  UNAUTHORIZED_ERROR
+  UNAUTHORIZED_ERROR,
+  UNGET_USER_INFORMATION,
+  CONTENT_BE_EMPTY,
+  GET_USER_MOMENT_LISTS_ERROR,
+  GET_USER_MOMENT_DETAILS_ERROR,
+  CREATE_USER_MOMENT_ERROR,
+  OPERATION_IS_NOT_ALLOWED
 }
   from '@/config/error'
 
@@ -43,9 +49,35 @@ function codeMessage(codeName: string, messageName?: string) {
     case SERVER_ERROR:
       code = -1007
       message += '服务器出错，请稍后再试!'
+      break;
     case UNAUTHORIZED_ERROR:
       code = -1008
       message += 'Invalid token(无效的token)!'
+      break;
+    case UNGET_USER_INFORMATION:
+      code = -1009
+      message += 'token中无法获取用户信息'
+      break
+    case CONTENT_BE_EMPTY:
+      code = -1010
+      message += '插入的内容content为空'
+      break
+    case GET_USER_MOMENT_LISTS_ERROR:
+      code = -1011
+      message += '数据库中获取用户动态列表失败'
+      break
+    case GET_USER_MOMENT_DETAILS_ERROR:
+      code = -1012
+      message += '数据库中获取用户动态详情失败'
+      break
+    case CREATE_USER_MOMENT_ERROR:
+      code = -1013
+      message += '数据库中创建用户动态失败'
+      break
+    case OPERATION_IS_NOT_ALLOWED:
+      code = -1014
+      message += '没有操作该资源的权限'
+      break
     default:
       break;
   }

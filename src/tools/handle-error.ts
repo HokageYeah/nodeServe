@@ -64,7 +64,7 @@ function codeMessage(codeName: string, messageName?: string) {
       break
     case GET_USER_MOMENT_LISTS_ERROR:
       code = -1011
-      message += '数据库中获取用户动态列表失败'
+      message += '该用户暂无动态'
       break
     case GET_USER_MOMENT_DETAILS_ERROR:
       code = -1012
@@ -72,7 +72,7 @@ function codeMessage(codeName: string, messageName?: string) {
       break
     case CREATE_USER_MOMENT_ERROR:
       code = -1013
-      message += '数据库中创建用户动态失败'
+      message += '该用户暂无动态详情'
       break
     case OPERATION_IS_NOT_ALLOWED:
       code = -1014

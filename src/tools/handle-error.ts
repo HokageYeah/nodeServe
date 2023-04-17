@@ -14,7 +14,8 @@ import {
   GET_USER_MOMENT_LISTS_ERROR,
   GET_USER_MOMENT_DETAILS_ERROR,
   CREATE_USER_MOMENT_ERROR,
-  OPERATION_IS_NOT_ALLOWED
+  OPERATION_IS_NOT_ALLOWED,
+  MODIFY_USER_MOMENT_ERROR
 }
   from '@/config/error'
 
@@ -77,6 +78,10 @@ function codeMessage(codeName: string, messageName?: string) {
     case OPERATION_IS_NOT_ALLOWED:
       code = -1014
       message += '没有操作该资源的权限'
+      break
+    case MODIFY_USER_MOMENT_ERROR:
+      code = -1015
+      message += '修改用户动态失败'
       break
     default:
       break;

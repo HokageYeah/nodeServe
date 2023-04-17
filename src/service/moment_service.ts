@@ -76,8 +76,21 @@ class Moment_DBService<T> implements Moment_DBServiceCls<T>{
         connect.release();
         return createMoment;
     }
-    modifyMoment(user: T): Promise<[OkPacket | ResultSetHeader | RowDataPacket[] | RowDataPacket[][] | OkPacket[], FieldPacket[]]> {
-        throw new Error("Method not implemented.");
+    // 修改动态数据
+    async modifyMoment(user: T): Promise<[OkPacket | ResultSetHeader | RowDataPacket[] | RowDataPacket[][] | OkPacket[], FieldPacket[]]> {
+        const connect = await connectionMysql();
+        // 获取用户信息
+        const { momentid, content } = user as User;
+        // 拼接sql语句
+        const sql =
+            `
+        UPDATE user_moment set content = ?
+        WHERE momentid = ?
+        `;
+        // 将用户名和加密后的密码保存到数据库中
+        const createMoment = await connect.execute<ResultSetHeader>(sql, [content, momentid]);
+        connect.release();
+        return createMoment;
     }
 }
 

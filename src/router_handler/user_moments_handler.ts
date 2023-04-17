@@ -8,7 +8,8 @@ import {
   SERVER_ERROR,
   GET_USER_MOMENT_LISTS_ERROR,
   GET_USER_MOMENT_DETAILS_ERROR,
-  CREATE_USER_MOMENT_ERROR
+  CREATE_USER_MOMENT_ERROR,
+  MODIFY_USER_MOMENT_ERROR
 } from "@/config/error";
 class UserMomentsController {
   getUserComentsList = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -100,9 +101,19 @@ class UserMomentsController {
       return;
     }
   };
-  reviseUserComents = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  modifyUserComents = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-
+      const tokenUserInfo = req.auth;
+      if (!tokenUserInfo) {
+        // token中没有数据
+        await next({ code: UNGET_USER_INFORMATION });
+        return;
+      }
+      const { momentid, content } = req.body;
+      tokenUserInfo.momentid = momentid;
+      tokenUserInfo.content = content;
+      const [modifyMomentResult] = await Moment_DBService.modifyMoment(tokenUserInfo)
+      return successResponse(res, { message: "修改用户动态成功", ...modifyMomentResult });
     } catch (error) {
       await next({ code: SERVER_ERROR, message: error });
       return;

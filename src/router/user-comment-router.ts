@@ -1,7 +1,7 @@
 import express from "express";
 import { Router } from "express";
 import UserCommentController from "@/router_handler/user_comment_handler";
-import { userCommentParamsVerify } from "@/middleware/comment-params-middleware";
+import { userCommentParamsVerify, userCommentReplyParamsVerify } from "@/middleware/comment-params-middleware";
 import { verifyPermission } from "@/middleware/permission-middleware"
 // 定义接口路径前缀
 const apiPrefix = "/permissions/user";
@@ -18,4 +18,11 @@ userCommentRouter.post(
   userCommentParamsVerify,
   UserCommentController.createUserComment
 );
+
+// 创建回复评论接口
+userCommentRouter.post(
+    apiPrefix + "/create-user-comment-reply",
+    userCommentReplyParamsVerify,
+    UserCommentController.createUserCommentReply
+  );
 module.exports = userCommentRouter;

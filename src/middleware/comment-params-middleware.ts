@@ -27,12 +27,12 @@ const content = body("content")
 const momentid = body("momentid")
     .notEmpty().withMessage('momentid参数为null')
     .isNumeric().withMessage('momentid参数必须为数字')
-const commentid = body("commentid")
-    .notEmpty().withMessage('commentid参数为null')
-    .isNumeric().withMessage('commentid参数必须为数字')
+const replyid = body("replyid")
+    .notEmpty().withMessage('replyid参数为null')
+    .isNumeric().withMessage('replyid参数必须为数字')
 
 export const userCommentParamsVerify = validate([content, momentid]);
-export const userCommentReplyParamsVerify = validate([content, momentid, commentid]);
+export const userCommentReplyParamsVerify = validate([content, momentid, replyid]);
 // module.exports.register = validate([
 //     username,
 //     password

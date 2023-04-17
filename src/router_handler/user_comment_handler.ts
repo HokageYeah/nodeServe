@@ -6,7 +6,8 @@ import {
     UNGET_USER_INFORMATION,
     CONTENT_BE_EMPTY,
     SERVER_ERROR,
-    CREATE_USER_COMMENT_ERROR
+    CREATE_USER_COMMENT_ERROR,
+    CREATE_USER_COMMENT_REPLY_ERROR
 } from "@/config/error";
 class UserCommentController {
     createUserComment = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -29,7 +30,6 @@ class UserCommentController {
             }
             tokenUserInfo.content = content;
             tokenUserInfo.momentid = momentid;
-            // 将用户名和加密后的密码保存到数据库中
             const [createCommentsResult] = await Comment_DBService.createComment(tokenUserInfo);
             console.log("查看插入后的评论是什么createCommentsResult=====>", createCommentsResult);
             if (!createCommentsResult) {
@@ -51,6 +51,14 @@ class UserCommentController {
                 // token中没有数据
                 await next({ code: UNGET_USER_INFORMATION });
                 return;
+            }
+            tokenUserInfo.content = content;
+            tokenUserInfo.momentid = momentid;
+            tokenUserInfo.replyid = replyid;
+            const [createCommentsResult] = await Comment_DBService.createCommentReply(tokenUserInfo);
+            console.log("查看插入后的评论是什么createCommentsResult=====>", createCommentsResult);
+            if (!createCommentsResult) {
+                return await next({ code: CREATE_USER_COMMENT_REPLY_ERROR })
             }
             return successResponse(res, { message: "创建用户回复成功" });
         } catch (error) {

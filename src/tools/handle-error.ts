@@ -16,7 +16,8 @@ import {
   CREATE_USER_MOMENT_ERROR,
   OPERATION_IS_NOT_ALLOWED,
   MODIFY_USER_MOMENT_ERROR,
-  CREATE_USER_COMMENT_ERROR
+  CREATE_USER_COMMENT_ERROR,
+  CREATE_USER_COMMENT_REPLY_ERROR
 }
   from '@/config/error'
 
@@ -87,6 +88,10 @@ function codeMessage(codeName: string, messageName?: string) {
     case CREATE_USER_COMMENT_ERROR:
       code = -1016
       message += '创建用户评论失败！'
+      break
+    case CREATE_USER_COMMENT_REPLY_ERROR:
+      code = -1017
+      message += '回复用户评论失败！'
       break
     default:
       break;

@@ -22,10 +22,10 @@ class Comment_DBService<T> implements Moment_DBServiceCls<T>{
     async createCommentReply(user: T): Promise<[OkPacket | ResultSetHeader | RowDataPacket[] | RowDataPacket[][] | OkPacket[], FieldPacket[]]> {
         const connect = await connectionMysql();
         // 获取用户信息
-        const { content, userid, momentid } = user as User;
+        const { content, userid, momentid, replyid } = user as User;
         // 拼接sql语句
-        const sql = `INSERT INTO user_comment (content, userid, momentid) VALUES (?,?,?)`;
-        const createMoment = await connect.execute<ResultSetHeader>(sql, [content, userid, momentid]);
+        const sql = `INSERT INTO user_comment (content, userid, momentid, replyid) VALUES (?,?,?,?)`;
+        const createMoment = await connect.execute<ResultSetHeader>(sql, [content, userid, momentid, replyid]);
         connect.release();
         return createMoment;
     }

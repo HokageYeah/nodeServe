@@ -15,7 +15,8 @@ import {
   GET_USER_MOMENT_DETAILS_ERROR,
   CREATE_USER_MOMENT_ERROR,
   OPERATION_IS_NOT_ALLOWED,
-  MODIFY_USER_MOMENT_ERROR
+  MODIFY_USER_MOMENT_ERROR,
+  CREATE_USER_COMMENT_ERROR
 }
   from '@/config/error'
 
@@ -73,7 +74,7 @@ function codeMessage(codeName: string, messageName?: string) {
       break
     case CREATE_USER_MOMENT_ERROR:
       code = -1013
-      message += '该用户暂无动态详情'
+      message += '创建用户动态失败'
       break
     case OPERATION_IS_NOT_ALLOWED:
       code = -1014
@@ -82,6 +83,10 @@ function codeMessage(codeName: string, messageName?: string) {
     case MODIFY_USER_MOMENT_ERROR:
       code = -1015
       message += '没有此条数据，操作失败！'
+      break
+    case CREATE_USER_COMMENT_ERROR:
+      code = -1016
+      message += '创建用户评论失败！'
       break
     default:
       break;

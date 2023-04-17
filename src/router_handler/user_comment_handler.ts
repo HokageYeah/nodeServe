@@ -46,7 +46,7 @@ class UserCommentController {
         try {
             const tokenUserInfo = req.auth;
             // 1、获取动态内容
-            const { content, momentid } = req.body;
+            const { content, momentid, replyid } = req.body;
             if (!tokenUserInfo) {
                 // token中没有数据
                 await next({ code: UNGET_USER_INFORMATION });

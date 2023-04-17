@@ -8,6 +8,7 @@ interface Moment_DBServiceCls<T> {
     createMoment(user: T): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]>;
     getMomentDetails(user: T): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]>
     modifyMoment(user: T): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]>
+    deleteMoment(user: T): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]>
 }
 class Moment_DBService<T> implements Moment_DBServiceCls<T>{
     sqlJoin;
@@ -55,7 +56,6 @@ class Moment_DBService<T> implements Moment_DBServiceCls<T>{
         const { content, userid } = user as User;
         // 拼接sql语句
         const sql = `INSERT INTO user_moment (content, user_id) VALUES (?,?)`;
-        // 将用户名和加密后的密码保存到数据库中
         const createMoment = await connect.execute<ResultSetHeader>(sql, [content, userid]);
         connect.release();
         return createMoment;
@@ -71,7 +71,6 @@ class Moment_DBService<T> implements Moment_DBServiceCls<T>{
         ${this.sqlJoin}
         WHERE um.momentid = ?
         `;
-        // 将用户名和加密后的密码保存到数据库中
         const createMoment = await connect.execute<ResultSetHeader>(sql, [momentid]);
         connect.release();
         return createMoment;
@@ -87,8 +86,18 @@ class Moment_DBService<T> implements Moment_DBServiceCls<T>{
         UPDATE user_moment set content = ?
         WHERE momentid = ?
         `;
-        // 将用户名和加密后的密码保存到数据库中
         const createMoment = await connect.execute<ResultSetHeader>(sql, [content, momentid]);
+        connect.release();
+        return createMoment;
+    }
+    // 删除动态数据
+    async deleteMoment(user: T): Promise<[ResultSetHeader | RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[], FieldPacket[]]> {
+        const connect = await connectionMysql();
+        // 获取用户信息
+        const { momentid } = user as User;
+        // 拼接sql语句
+        const sql =`DELETE FROM user_moment WHERE momentid = ?`;
+        const createMoment = await connect.execute<ResultSetHeader>(sql, [momentid]);
         connect.release();
         return createMoment;
     }

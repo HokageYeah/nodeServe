@@ -81,7 +81,7 @@ function codeMessage(codeName: string, messageName?: string) {
       break
     case MODIFY_USER_MOMENT_ERROR:
       code = -1015
-      message += '修改用户动态失败'
+      message += '没有此条数据，操作失败！'
       break
     default:
       break;

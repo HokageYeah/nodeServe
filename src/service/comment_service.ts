@@ -6,8 +6,19 @@ import { User } from "@/libcommon/index";
 interface Moment_DBServiceCls<T> {
     createComment(user: T): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]>;
     createCommentReply(user: T): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]>;
+    queryCommentReply(user: T): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]>;
 }
 class Comment_DBService<T> implements Moment_DBServiceCls<T>{
+    async queryCommentReply(user: T): Promise<[ResultSetHeader | RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[], FieldPacket[]]> {
+        const connect = await connectionMysql();
+        // 获取用户信息
+        const { replyid } = user as User;
+        // 拼接sql语句
+        const sql = `SELECT * FROM user_comment WHERE commentid = ?`;
+        const createMoment = await connect.execute<ResultSetHeader>(sql, [replyid]);
+        connect.release();
+        return createMoment;
+    }
     async createComment(user: T): Promise<[OkPacket | ResultSetHeader | RowDataPacket[] | RowDataPacket[][] | OkPacket[], FieldPacket[]]> {
         const connect = await connectionMysql();
         // 获取用户信息

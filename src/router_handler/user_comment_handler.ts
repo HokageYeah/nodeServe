@@ -7,7 +7,8 @@ import {
     CONTENT_BE_EMPTY,
     SERVER_ERROR,
     CREATE_USER_COMMENT_ERROR,
-    CREATE_USER_COMMENT_REPLY_ERROR
+    CREATE_USER_COMMENT_REPLY_ERROR,
+    CREATE_USER_COMMENT_REPLY_NONE
 } from "@/config/error";
 class UserCommentController {
     createUserComment = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -55,6 +56,11 @@ class UserCommentController {
             tokenUserInfo.content = content;
             tokenUserInfo.momentid = momentid;
             tokenUserInfo.replyid = replyid;
+            const [queryCommentsReply] = await Comment_DBService.queryCommentReply(tokenUserInfo);
+            const queryReplyAry: any[] = Array.isArray(queryCommentsReply) ? queryCommentsReply : [queryCommentsReply];
+            if (!queryReplyAry || queryReplyAry.length == 0) {
+                return await next({ code: CREATE_USER_COMMENT_REPLY_NONE })
+              }
             const [createCommentsResult] = await Comment_DBService.createCommentReply(tokenUserInfo);
             console.log("查看插入后的评论是什么createCommentsResult=====>", createCommentsResult);
             if (!createCommentsResult) {

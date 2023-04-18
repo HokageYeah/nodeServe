@@ -32,14 +32,14 @@ userComenrRouter.post(
 userComenrRouter.post(
   apiPrefix + "/revise-user-moments",
   userContentValidatorAry,
-  verifyPermission('momentid'),
+  verifyPermission(['momentid']),
   UserMomentsController.modifyUserComents
 );
 
 // 删除用户动态 需要添加当前登陆的用户是否有操作该资源的权限
 userComenrRouter.post(
   apiPrefix + "/delete-user-moments",
-  verifyPermission('momentid'),
+  verifyPermission(['momentid']),
   UserMomentsController.deleteUserComents
 );
 module.exports = userComenrRouter;

@@ -17,7 +17,8 @@ import {
   OPERATION_IS_NOT_ALLOWED,
   MODIFY_USER_MOMENT_ERROR,
   CREATE_USER_COMMENT_ERROR,
-  CREATE_USER_COMMENT_REPLY_ERROR
+  CREATE_USER_COMMENT_REPLY_ERROR,
+  CREATE_USER_COMMENT_REPLY_NONE
 }
   from '@/config/error'
 
@@ -92,6 +93,10 @@ function codeMessage(codeName: string, messageName?: string) {
     case CREATE_USER_COMMENT_REPLY_ERROR:
       code = -1017
       message += '回复用户评论失败！'
+      break
+    case CREATE_USER_COMMENT_REPLY_NONE:
+      code = -1018
+      message += '当前回复的评论不存在！'
       break
     default:
       break;

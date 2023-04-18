@@ -11,7 +11,8 @@
     "stop-all": "pm2 stop all",
     "delete-all": "pm2 delete all",
     "restart-all": "pm2 restart all",
-    "pm2-log": "pm2 monit",
+    "pm2-monit": "pm2 monit",
+    "pm2-log": "pm2 log",
     "pm2-list": "pm2 list",
     "build": "tsc"
   },

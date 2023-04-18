@@ -29,7 +29,7 @@ app.use(
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json()); // 解析 传递的JSON 数据
 // 设置static中间件后，浏览器访问时，会自动去public目录寻找资源
-app.use(express.static(path.resolve(__dirname, "./public")));
+app.use(express.static(path.resolve(__dirname, "../public")));
 
 // 将 connection 变量暴露到全局，可以在其他模块中直接使用
 // // 或者使用 process 全局变量

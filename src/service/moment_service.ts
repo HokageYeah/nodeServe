@@ -66,11 +66,27 @@ class Moment_DBService<T> implements Moment_DBServiceCls<T>{
         // 获取用户信息
         const { momentid } = user as User;
         // 拼接sql语句
-        const sql =
+        let sql =
             `
         ${this.sqlJoin}
         WHERE um.momentid = ?
         `;
+        // 新增获取评论的sql语句
+        sql = 
+        `
+        SELECT
+        m.momentid,m.content,m.createTime,m.updateTime,
+        JSON_OBJECT('userid',u.userid,'username',u.username,'createTime',u.createTime,'updateTime',u.updateTime) user,
+        (SELECT COUNT(*) FROM user_comment com WHERE com.momentid = m.momentid) commentCount,
+        (
+            JSON_ARRAYAGG(JSON_OBJECT('commentid',c.commentid,'content',c.content,'momentid',c.momentid))
+        )comments
+        FROM user_moment m
+        LEFT JOIN users u ON u.userid = m.user_id
+        LEFT JOIN user_comment c ON c.momentid = m.momentid
+        WHERE m.momentid=?
+        GROUP BY m.momentid
+        `
         const createMoment = await connect.execute<ResultSetHeader>(sql, [momentid]);
         connect.release();
         return createMoment;

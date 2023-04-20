@@ -3,4 +3,5 @@ import dotenv from "dotenv"
 dotenv.config();
 const port = process.env.SERVER_PORT;
 console.log('查看.env文件======>', process.env.SERVER_PORT);
+console.log('查看.配置文件的是什么======>', process.version);
 export const { SERVER_PORT } = process.env

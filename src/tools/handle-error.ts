@@ -18,7 +18,9 @@ import {
   MODIFY_USER_MOMENT_ERROR,
   CREATE_USER_COMMENT_ERROR,
   CREATE_USER_COMMENT_REPLY_ERROR,
-  CREATE_USER_COMMENT_REPLY_NONE
+  CREATE_USER_COMMENT_REPLY_NONE,
+  CREATE_LABEL_ERROR,
+  CREATE_LABEL_REPEAT
 }
   from '@/config/error'
 
@@ -84,7 +86,7 @@ function codeMessage(codeName: string, messageName?: string) {
       break
     case MODIFY_USER_MOMENT_ERROR:
       code = -1015
-      message += '没有此条数据，操作失败！'
+      message += '没有此条数据，操作失败！？？'
       break
     case CREATE_USER_COMMENT_ERROR:
       code = -1016
@@ -97,6 +99,14 @@ function codeMessage(codeName: string, messageName?: string) {
     case CREATE_USER_COMMENT_REPLY_NONE:
       code = -1018
       message += '当前回复的评论不存在！'
+      break
+    case CREATE_LABEL_ERROR: 
+      code = -1019
+      message += '创建标签失败！'
+      break
+    case CREATE_LABEL_REPEAT:
+      code = -1020
+      message += '标签已存在，请重新创建！'
       break
     default:
       break;

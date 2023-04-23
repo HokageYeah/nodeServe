@@ -62,7 +62,6 @@ class userController {
           // algorithm: "HS256", //设置签名算法 HS256:对称加密
           algorithm: "RS256", // RS256:非对称加密
         });
-        console.log("查看一下数据tokenStr：====>：", tokenStr);
         return successResponse(res, {
           ...user,
           token: "Bearer " + tokenStr,

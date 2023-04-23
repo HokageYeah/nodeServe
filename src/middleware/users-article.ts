@@ -52,6 +52,30 @@ export const resetPasswordValidatorAry = validate([
   newPassword,
 ]);
 export const userContentValidatorAry = validate([content]);
+
+// 统一的文字输入教研逻辑
+export const userCommentValidatorAry = function (name: string) {
+  const content = body(name)
+  .isLength({ min: 1, max: 100 })
+  .withMessage("内容长度最大100个字符，最小为1个字符")
+  .custom((value) => !/<[^>]+>/g.test(value))
+  .withMessage("输入内容格式错误！！！")
+  .custom(
+    (value) =>
+      !/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi.test(value)
+  )
+  .withMessage("输入内容格式错误！！！")
+  .custom(
+    (value) =>
+      !/(?:')|(?:--)|(?:\/\*)|(?:\*\/)|(?:\b(select|union|insert|update|delete|trancate|char|into|substr|ascii|declare|exec|count|master|into|drop|execute)\b)/i.test(
+        value
+      )
+  )
+  .withMessage("输入内容格式错误！！！")
+  // 最后兜底：使用xss插件 用于过滤 HTML 标签和 JavaScript 代码
+  .customSanitizer(value => xss(value));
+  return validate([content])
+}
 // module.exports.register = validate([
 //     username,
 //     password

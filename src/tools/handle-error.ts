@@ -20,7 +20,8 @@ import {
   CREATE_USER_COMMENT_REPLY_ERROR,
   CREATE_USER_COMMENT_REPLY_NONE,
   CREATE_LABEL_ERROR,
-  CREATE_LABEL_REPEAT
+  CREATE_LABEL_REPEAT,
+  CREAT_LABEL_MOMENT_ERROR
 }
   from '@/config/error'
 
@@ -54,7 +55,7 @@ function codeMessage(codeName: string, messageName?: string) {
       break;
     case SERVER_ERROR:
       code = -1007
-      message += '服务器出错，请稍后再试!'
+      message += `服务器出错，请稍后再试!error:${messageName}`
       break;
     case UNAUTHORIZED_ERROR:
       code = -1008
@@ -100,13 +101,17 @@ function codeMessage(codeName: string, messageName?: string) {
       code = -1018
       message += '当前回复的评论不存在！'
       break
-    case CREATE_LABEL_ERROR: 
+    case CREATE_LABEL_ERROR:
       code = -1019
       message += '创建标签失败！'
       break
     case CREATE_LABEL_REPEAT:
       code = -1020
       message += '标签已存在，请重新创建！'
+      break
+    case CREAT_LABEL_MOMENT_ERROR:
+      code = -1021
+      message += '动态中添加标签失败！'
       break
     default:
       break;

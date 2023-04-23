@@ -9,6 +9,8 @@ interface Moment_DBServiceCls<T> {
     getMomentDetails(user: T): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]>
     modifyMoment(user: T): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]>
     deleteMoment(user: T): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]>
+    createLabelToMoment(user: T): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]>
+    hasLabelMoment(user: T): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]>
 }
 class Moment_DBService<T> implements Moment_DBServiceCls<T>{
     sqlJoin;
@@ -78,9 +80,8 @@ class Moment_DBService<T> implements Moment_DBServiceCls<T>{
         m.momentid,m.content,m.createTime,m.updateTime,
         JSON_OBJECT('userid',u.userid,'username',u.username,'createTime',u.createTime,'updateTime',u.updateTime) user,
         (SELECT COUNT(*) FROM user_comment com WHERE com.momentid = m.momentid) commentCount,
-        (
-            JSON_ARRAYAGG(JSON_OBJECT('commentid',c.commentid,'content',c.content,'momentid',c.momentid))
-        )comments
+        (SELECT COUNT(*) FROM moment_label ml WHERE ml.momentid = m.momentid) labelCount,
+        (JSON_ARRAYAGG(JSON_OBJECT('commentid',c.commentid,'content',c.content,'momentid',c.momentid)))comments
         FROM user_moment m
         LEFT JOIN users u ON u.userid = m.user_id
         LEFT JOIN user_comment c ON c.momentid = m.momentid
@@ -117,6 +118,26 @@ class Moment_DBService<T> implements Moment_DBServiceCls<T>{
         connect.release();
         return createMoment;
     }
+
+    // 添加标签到动态中
+    async createLabelToMoment(user: T): Promise<[ResultSetHeader | RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[], FieldPacket[]]> {
+        const connect = await connectionMysql();
+        // 获取用户信息
+        const { momentid, labelid } = user as User;
+        const sql = `INSERT INTO moment_label (momentid, labelid) VALUES (?,?)`
+        const createMoment = await connect.execute<ResultSetHeader>(sql, [momentid, labelid]);
+        connect.release();
+        return createMoment;
+    }
+    async hasLabelMoment(user: T): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]> {
+        const connect = await connectionMysql();
+        const { momentid, labelid } = user as User;
+        const statement = `SELECT * FROM moment_label WHERE momentid = ? AND labelid = ?`
+        const result = await connect.execute(statement, [momentid, labelid])
+        connect.release();
+        return result;
+    }
+
 }
 
 export default new Moment_DBService<User>()

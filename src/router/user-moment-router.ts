@@ -3,6 +3,8 @@ import { Router } from "express";
 import UserMomentsController from "@/router_handler/user_moments_handler";
 import { userContentValidatorAry } from "@/middleware/users-article";
 import { verifyPermission } from "@/middleware/permission-middleware"
+import { verifyLabelExists } from "@/middleware/label-moment-middleware"
+
 // 定义接口路径前缀
 const apiPrefix = "/permissions/user";
 // 创建路由对象
@@ -41,5 +43,13 @@ userComenrRouter.post(
   apiPrefix + "/delete-user-moments",
   verifyPermission(['momentid']),
   UserMomentsController.deleteUserComents
+);
+
+// 给动态添加标签
+userComenrRouter.post(
+  apiPrefix + "/add-moment-labels",
+  verifyPermission(['momentid']),
+  verifyLabelExists,
+  UserMomentsController.addMomentLabels
 );
 module.exports = userComenrRouter;

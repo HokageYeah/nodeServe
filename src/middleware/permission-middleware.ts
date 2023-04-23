@@ -1,5 +1,5 @@
 // 接口权限管理的中间件
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { AuthenticatedRequest } from "@/tools/confi-jwt";
 import { UNGET_USER_INFORMATION, OPERATION_IS_NOT_ALLOWED, MODIFY_USER_MOMENT_ERROR } from "@/config/error";
 import Permission_DBService from '@/service/permission_service'

@@ -8,7 +8,8 @@ import {
   SERVER_ERROR,
   GET_USER_MOMENT_LISTS_ERROR,
   GET_USER_MOMENT_DETAILS_ERROR,
-  CREATE_USER_MOMENT_ERROR
+  CREATE_USER_MOMENT_ERROR,
+  CREAT_LABEL_MOMENT_ERROR
 } from "@/config/error";
 class UserMomentsController {
   getUserComentsList = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -35,9 +36,9 @@ class UserMomentsController {
         return await next({ code: GET_USER_MOMENT_LISTS_ERROR })
       }
       return successResponse(res, { message: "获取用户动态成功", getUserMomentsResult });
-    } catch (error) {
+    } catch (error:any) {
       console.error(error);
-      await next({ code: SERVER_ERROR, message: error });
+      await next({ code: SERVER_ERROR, message: error.sql });
       return;
     }
   };
@@ -67,9 +68,9 @@ class UserMomentsController {
         return await next({ code: CREATE_USER_MOMENT_ERROR })
       }
       return successResponse(res, { message: "创建用户动态成功", ...createMomentsResult });
-    } catch (error) {
+    } catch (error:any) {
       console.error(error);
-      await next({ code: SERVER_ERROR, message: error });
+      await next({ code: SERVER_ERROR, message: error.sql });
       return;
     }
   };
@@ -94,9 +95,9 @@ class UserMomentsController {
         return await next({ code: GET_USER_MOMENT_DETAILS_ERROR })
       }
       return successResponse(res, getDetailsAry[0]);
-    } catch (error) {
+    } catch (error:any) {
       console.error(error);
-      await next({ code: SERVER_ERROR, message: error });
+      await next({ code: SERVER_ERROR, message: error.sql });
       return;
     }
   };
@@ -113,8 +114,8 @@ class UserMomentsController {
       tokenUserInfo.content = content;
       const [modifyMomentResult] = await Moment_DBService.modifyMoment(tokenUserInfo)
       return successResponse(res, { message: "修改用户动态成功", ...modifyMomentResult });
-    } catch (error) {
-      await next({ code: SERVER_ERROR, message: error });
+    } catch (error: any) {
+      await next({ code: SERVER_ERROR, message: error.sql });
       return;
     }
   };
@@ -130,8 +131,38 @@ class UserMomentsController {
       tokenUserInfo.momentid = momentid;
       const [modifyMomentResult] = await Moment_DBService.deleteMoment(tokenUserInfo)
       return successResponse(res, { message: "删除用户动态成功", ...modifyMomentResult });
-    } catch (error) {
-      await next({ code: SERVER_ERROR, message: error });
+    } catch (error :any) {
+      await next({ code: SERVER_ERROR, message: error.sql });
+      return;
+    }
+  };
+  addMomentLabels = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const tokenUserInfo = req.auth;
+      if (!tokenUserInfo) {
+        // token中没有数据
+        await next({ code: UNGET_USER_INFORMATION });
+        return;
+      }
+      // labels 是labelid 和name
+      const { momentid, labels } = req.body;
+      for (const labelObj of labels) {
+        tokenUserInfo.labelid = labelObj.labelid
+        tokenUserInfo.momentid = momentid
+        const [result] = await Moment_DBService.hasLabelMoment(tokenUserInfo)
+        console.log('查看查询标签的数组======>',labels);
+        const getResultAry: any[] = Array.isArray(result) ? result : [result];
+        if (getResultAry.length != 0) continue
+        // 不存在进行插入操作
+        const [insertResult] = await Moment_DBService.createLabelToMoment(tokenUserInfo)
+        if (!insertResult) {
+          return await next({ code: CREAT_LABEL_MOMENT_ERROR})
+        }
+      }
+      return successResponse(res, { message: "动态添加标签成功" });
+    } catch (error :any) {
+      console.log("查看错误========>",error);
+      await next({ code: SERVER_ERROR, message: error.sql });
       return;
     }
   }

@@ -74,6 +74,21 @@ class Moment_DBService<T> implements Moment_DBServiceCls<T>{
         WHERE um.momentid = ?
         `;
         // 新增获取评论的sql语句
+        // sql = 
+        // `
+        // SELECT
+        // m.momentid,m.content,m.createTime,m.updateTime,
+        // JSON_OBJECT('userid',u.userid,'username',u.username,'createTime',u.createTime,'updateTime',u.updateTime) user,
+        // (SELECT COUNT(*) FROM user_comment com WHERE com.momentid = m.momentid) commentCount,
+        // (SELECT COUNT(*) FROM moment_label ml WHERE ml.momentid = m.momentid) labelCount,
+        // (JSON_ARRAYAGG(JSON_OBJECT('commentid',c.commentid,'content',c.content,'momentid',c.momentid)))comments
+        // FROM user_moment m
+        // LEFT JOIN users u ON u.userid = m.user_id
+        // LEFT JOIN user_comment c ON c.momentid = m.momentid
+        // WHERE m.momentid=?
+        // GROUP BY m.momentid
+        // `
+
         sql = 
         `
         SELECT
@@ -81,13 +96,27 @@ class Moment_DBService<T> implements Moment_DBServiceCls<T>{
         JSON_OBJECT('userid',u.userid,'username',u.username,'createTime',u.createTime,'updateTime',u.updateTime) user,
         (SELECT COUNT(*) FROM user_comment com WHERE com.momentid = m.momentid) commentCount,
         (SELECT COUNT(*) FROM moment_label ml WHERE ml.momentid = m.momentid) labelCount,
-        (JSON_ARRAYAGG(JSON_OBJECT('commentid',c.commentid,'content',c.content,'momentid',c.momentid)))comments
+        (
+            SELECT JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'commentid',commentid,
+                    'content',content,
+                    'user', JSON_OBJECT('username',us.username,'userid',us.userid)
+                    ))
+            FROM user_comment uco
+            LEFT JOIN users us ON us.userid = uco.userid
+            WHERE uco.momentid = m.momentid
+        )
+            comment,
+        JSON_ARRAYAGG(JSON_OBJECT('labelid',ul.labelid,'name',ul.name)) labels
         FROM user_moment m
         LEFT JOIN users u ON u.userid = m.user_id
-        LEFT JOIN user_comment c ON c.momentid = m.momentid
+        LEFT JOIN moment_label mml ON mml.momentid = m.momentid
+        LEFT JOIN user_label ul ON ul.labelid = mml.labelid
         WHERE m.momentid=?
         GROUP BY m.momentid
         `
+
         const createMoment = await connect.execute<ResultSetHeader>(sql, [momentid]);
         connect.release();
         return createMoment;

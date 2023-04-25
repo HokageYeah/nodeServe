@@ -5,8 +5,9 @@ import { FieldPacket, OkPacket, ResultSetHeader, RowDataPacket } from "mysql2";
 interface User_DBServiceCls<T> {
     queryUser(user: T): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]>;
     createUser(user: T): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]>;
-    modifyUser(user: T): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]>
-    createUserDetails(user: T): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]>
+    modifyUser(user: T): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]>;
+    createUserDetails(user: T): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]>;
+    updateUserAvatar(user: T): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]>;
 }
 // 定义查询结果数据类型
 type QueryResult<T> = [T[], RowDataPacket[]];
@@ -34,7 +35,7 @@ class User_DBService<T> implements User_DBServiceCls<T>{
         // 拼接sql语句
         const sql = `INSERT INTO users (username, password) VALUES (?, ?)`;
         // 将用户名和加密后的密码保存到数据库中
-        const registUser = await connect.execute<ResultSetHeader>(sql,[username, password]);
+        const registUser = await connect.execute<ResultSetHeader>(sql, [username, password]);
         connect.release();
         return registUser;
     }
@@ -65,6 +66,20 @@ class User_DBService<T> implements User_DBServiceCls<T>{
         // 释放连接
         connect.release();
         return userDetailsInsertResult;
+    }
+    async updateUserAvatar(user: T) {
+        const connect = await connectionMysql();
+        // 获取用户信息
+        const { user_avatar_pic, userid } = user as User;
+        // 更新用户详情信息
+        const newSql = `UPDATE users SET user_avatar_pic = ? WHERE userid = ?`;
+        const updateUserAvatarResult = await connect.execute<ResultSetHeader>({
+            sql: newSql,
+            values: [user_avatar_pic, userid],
+        });
+        // 释放连接
+        connect.release();
+        return updateUserAvatarResult;
     }
 }
 export default new User_DBService<User>();

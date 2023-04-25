@@ -22,7 +22,8 @@ import {
   CREATE_LABEL_ERROR,
   CREATE_LABEL_REPEAT,
   CREAT_LABEL_MOMENT_ERROR,
-  CREAT_USER_AVATAR_ERROR
+  CREAT_USER_AVATAR_ERROR,
+  GET_USER_AVATAR_ERROR
 }
   from '@/config/error'
 
@@ -117,6 +118,10 @@ function codeMessage(codeName: string, messageName?: string) {
     case CREAT_USER_AVATAR_ERROR:
       code = -1022
       message += '上传用户头像失败！'
+      break
+    case GET_USER_AVATAR_ERROR:
+      code = -1023
+      message += '获取用户头像失败！'
       break
     default:
       break;

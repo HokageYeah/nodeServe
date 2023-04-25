@@ -2,12 +2,15 @@ import { NextFunction, Response } from "express";
 import { AuthenticatedRequest } from "@/tools/confi-jwt";
 import { successResponse } from "@/tools/handle-error";
 import File_DBService from "@/service/file_service";
+import User_DBService from "@/service/user_service";
 import {
     UNGET_USER_INFORMATION,
     SERVER_ERROR,
     CREATE_LABEL_ERROR,
     CREAT_USER_AVATAR_ERROR
 } from "@/config/error";
+import { SERVER_PORT, SERVER_HOST } from "@/config/server"
+
 class FilesController {
     uploadFile = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
         try {
@@ -23,12 +26,21 @@ class FilesController {
                 await next({ code: UNGET_USER_INFORMATION });
                 return;
             }
+            const { userid } = tokenUserInfo;
             tokenUserInfo.filename = filename;
             tokenUserInfo.mimetype = mimetype;
             tokenUserInfo.size = size;
             const [createFilesResult] = await File_DBService.createFile(tokenUserInfo);
             console.log("查看插入后的文件标签是什么createFilesResult=====>", createFilesResult);
             if (!createFilesResult) {
+                return await next({ code: CREAT_USER_AVATAR_ERROR })
+            }
+            // 更新用户表users头像
+            // 头像地址
+            const avatarUrl = `${SERVER_HOST}:${SERVER_PORT}/api/user/avatar/${userid}`
+            tokenUserInfo.user_avatar_pic = avatarUrl
+            const updateAvaResult = await User_DBService.updateUserAvatar(tokenUserInfo)
+            if (!updateAvaResult) {
                 return await next({ code: CREAT_USER_AVATAR_ERROR })
             }
             console.log('查看头像上传成功信息========>', req.file);

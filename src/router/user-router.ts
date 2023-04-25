@@ -40,6 +40,10 @@ userRouter.post(
 // 退出登录
 userRouter.post(apiPrefix + "/logout", userController.userLogout);
 
+// 获取用户头像，get请求
+userRouter.get(apiPrefix + "/avatar/:userid", userController.showAvatarImage);
+
+
 userRouter.use((req, res, next) => {
   console.log("这个是错误级别的中间件哈哈哈哈哈==========>");
 });

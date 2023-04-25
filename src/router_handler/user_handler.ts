@@ -15,6 +15,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { ResultSetHeader } from "mysql2";
 import User_DBService from "@/service/user_service";
+import File_DBService from "@/service/file_service";
 import { successResponse } from "@/tools/handle-error";
 import { privateKey } from "@/jwt-keys/private_public_path";
 import {
@@ -25,7 +26,11 @@ import {
   ORIGINAL_PASSWORD_IS_WRONG,
   TOKEN_DELETED,
   SERVER_ERROR,
+  GET_USER_AVATAR_ERROR
 } from "@/config/error";
+// 读取文件
+import fs from 'fs'
+import { UPLOAD_PATH } from '@/config/path'
 
 // 导入配置文件
 import { jwtSecretKey } from "@/tools/confi-jwt";
@@ -235,6 +240,48 @@ class userController {
       }
     }
     callBack();
+  }
+
+  // 获取用户头像
+  async showAvatarImage(req: Request, res: Response, next: NextFunction) {
+    try {
+      // 获取用户id
+      const { userid } = req.params
+      // 获取用户id对应头像信息
+      const [queryAvatarResult] = await File_DBService.queryFile(userid)
+      const getAvatarAry: any[] = Array.isArray(queryAvatarResult) ? queryAvatarResult : [queryAvatarResult];
+      if (!getAvatarAry || getAvatarAry.length == 0) {
+        return await next({ code: GET_USER_AVATAR_ERROR })
+      }
+      const { filename, mimetype } = getAvatarAry.pop()
+
+      //方案一
+      // 读取文件流返回出去
+      // const readStreamFile = fs.createReadStream(`${UPLOAD_PATH}/${filename}`)
+      // // 设置响应头
+      // res.set('Content-Type', mimetype);
+      // return readStreamFile.pipe(res);
+
+      // 方案2
+      const readStreamFile = fs.createReadStream(`${UPLOAD_PATH}/${filename}`)
+      res.set('Content-Type', mimetype);
+      let responseData = <any>[] //存储文件流
+      if(readStreamFile) {
+        readStreamFile.on('data', function(chunk) {
+          responseData.push(chunk)
+        });
+        readStreamFile.on('end', function() {
+          let finalData = Buffer.concat(responseData);
+          res.write(finalData)
+          res.end()
+        })
+      } else {
+        return await next({ code: GET_USER_AVATAR_ERROR })
+      }
+    } catch (error) {
+      await next({ code: SERVER_ERROR, message: error });
+      return;
+    }
   }
 }
 

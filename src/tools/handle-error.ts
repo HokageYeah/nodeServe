@@ -21,7 +21,8 @@ import {
   CREATE_USER_COMMENT_REPLY_NONE,
   CREATE_LABEL_ERROR,
   CREATE_LABEL_REPEAT,
-  CREAT_LABEL_MOMENT_ERROR
+  CREAT_LABEL_MOMENT_ERROR,
+  CREAT_USER_AVATAR_ERROR
 }
   from '@/config/error'
 
@@ -112,6 +113,10 @@ function codeMessage(codeName: string, messageName?: string) {
     case CREAT_LABEL_MOMENT_ERROR:
       code = -1021
       message += '动态中添加标签失败！'
+      break
+    case CREAT_USER_AVATAR_ERROR:
+      code = -1022
+      message += '上传用户头像失败！'
       break
     default:
       break;

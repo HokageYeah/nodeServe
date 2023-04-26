@@ -26,7 +26,8 @@
     "@types/express": "^4.17.17",
     "@types/jsonwebtoken": "^9.0.1",
     "@types/multer": "^1.4.7",
-    "@types/node": "^18.15.11"
+    "@types/node": "^18.15.11",
+    "@types/ws": "^8.5.4"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -39,6 +40,7 @@
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.2.0",
     "tsconfig-paths": "^4.2.0",
+    "ws": "^8.13.0",
     "xss": "^1.0.14"
   }
 }

@@ -18,10 +18,17 @@ class WebSocketServer {
       // 将客户端添加到clients中
       that.clients.push(socket);
       // 向客户端发送消息
-      socket.send("<h1>你好客户端，我是服务器的哈哈哈哈消息</h1>");
+      // socket.send("<h1>你好客户端，我是服务器的哈哈哈哈消息</h1>");
       // 监听客户端发来的消息
-      socket.on("message", (message: string) => {
+      socket.on("message", (message: any) => {
         console.log(`WebSocket 客户端发送过来的消息: ${message}`);
+        console.log(message);
+        this.clients.forEach((client) => {
+          // 判断是否处于连接上的
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(message);
+          }
+        });
       });
       // 监听 WebSocket 连接关闭事件
       socket.on("close", () => {
@@ -30,18 +37,18 @@ class WebSocketServer {
     });
 
     // 定时向所有客户端发送消息
-    setInterval(() => {
-      const data = new Date().toString();
-      console.log("发送消息：", data);
+    // setInterval(() => {
+    //   const data = new Date().toString();
+    //   console.log("发送消息：", data);
 
-      // 遍历所有客户端并发送消息
-      this.clients.forEach((client) => {
-        // 判断是否处于连接上的
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(data);
-        }
-      });
-    }, 10000);
+    //   // 遍历所有客户端并发送消息
+    //   this.clients.forEach((client) => {
+    //     // 判断是否处于连接上的
+    //     if (client.readyState === WebSocket.OPEN) {
+    //       client.send(data);
+    //     }
+    //   });
+    // }, 10000);
   }
 }
 export default WebSocketServer;

@@ -1,13 +1,15 @@
 import app from "@/app/index";
 import { SERVER_PORT } from "@/config/server";
 import WebSocketServer from '@/app/WebSocket'
+import WebSocketRoomServer from '@/app/web-socket-room'
 
 // 创建 HTTP 服务器并将 Express 应用程序挂载到它上面
 const server = app.listen(SERVER_PORT, () => {
   console.log("app.js入口服务启动了");
 });
 // 创建 WebSocket 服务
-const wsServer = new WebSocketServer(server);
+// const wsServer = new WebSocketServer(server);
+const wsServer2 = new WebSocketRoomServer(server);
 
 // // 创建 WebSocket 服务器并将其连接到 HTTP 服务器上
 // const wsServer = new WebSocket.Server({ server });

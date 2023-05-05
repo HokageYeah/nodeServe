@@ -31,6 +31,7 @@ class WebSocketRoomServer {
       // 监听客户端发来的消息
       socket.on("message", (message: Buffer) => {
         const data = message.toString("utf8");
+        console.log("判读消息是什么data：====>", data);
         const messageObj: messageType = JSON.parse(data);
         console.log("判读消息是什么：====>", messageObj);
         // 判断消息是否是加入房间的

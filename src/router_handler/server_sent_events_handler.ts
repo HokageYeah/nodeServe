@@ -7,6 +7,7 @@ class ServerSentEventsController {
   eventEmitter: EventEmitter;
   intervalId: NodeJS.Timer | undefined;
   constructor() {
+    // EventEmitter,发布/订阅模式
     this.eventEmitter = new EventEmitter();
   }
   getStream = (
@@ -23,6 +24,10 @@ class ServerSentEventsController {
 
     this.eventEmitter.on("data", (data) => {
       console.log('传输过来的数据====>', data);
+      // 浏览器默认的是，如果服务器端三秒内没有发送任何信息，则开始重连。服务器端可以用retry头信息，指定通信的最大间隔时间。
+      res.write("retry: 10000\n");
+      // event头信息表示自定义的数据类型，或者说数据的名字。
+      res.write("event: connecttime\n");
       res.write(`data: ${JSON.stringify(data)}\n\n`);
     });
 

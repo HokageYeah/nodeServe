@@ -18,7 +18,12 @@ class WebSocketServer {
       // 将客户端添加到clients中
       that.clients.push(socket);
       // 向客户端发送消息
-      // socket.send("<h1>你好客户端，我是服务器的哈哈哈哈消息</h1>");
+      let socketObj = {
+        msg :'<h1>你好客户端，我是服务器的哈哈哈哈消息</h1>',
+        method: 'webSocket_device_transport',
+        sn: 'webSocketCallBack'
+      }
+      socket.send(JSON.stringify(socketObj));
       // 监听客户端发来的消息
       socket.on("message", (message: any) => {
         console.log(`WebSocket 客户端发送过来的消息: ${message}`);
@@ -26,7 +31,9 @@ class WebSocketServer {
         this.clients.forEach((client) => {
           // 判断是否处于连接上的
           if (client.readyState === WebSocket.OPEN) {
-            client.send(message);
+            // client.send(message);
+            console.log("WebSocket发送消息了====>");
+            client.send("" + message);
           }
         });
       });

@@ -11,6 +11,8 @@
   1、打开终端，输入以下命令来生成私钥：
 
   ```shell
+  genrsa: 生成出来的key是不需要输入密码的。
+  
   openssl genrsa -out private_key.pem 2048
   ```
   2、输入以下命令来生成公钥：

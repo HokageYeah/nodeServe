@@ -17,7 +17,7 @@ class ServerSentEventsController {
   ) => {
     res.set({
       "Cache-Control": "no-cache",
-      "Content-Type": "text/event-stream",
+      "Content-Type": "text/event-stream", // SSE设置的核心代码，设置对应的请求头信息
       Connection: "keep-alive",
       //   'Access-Control-Allow-Origin': '*', //解决跨域问题
     });

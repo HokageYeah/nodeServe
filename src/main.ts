@@ -4,7 +4,11 @@ import WebSocketServer from '@/app/WebSocket'
 import WebSocketRoomServer from '@/app/web-socket-room'
 
 // 创建 HTTP 服务器并将 Express 应用程序挂载到它上面
-const server = app.listen(SERVER_PORT, () => {
+const server = app.listen(SERVER_PORT, (err?: Error) => {
+  if (err) {
+    console.error("服务器启动失败:", err);
+    return;
+  }
   console.log("app.js入口服务启动了");
 });
 // 创建 WebSocket 服务

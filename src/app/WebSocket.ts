@@ -19,21 +19,44 @@ class WebSocketServer {
       that.clients.push(socket);
       // 向客户端发送消息
       let socketObj = {
-        msg :'<h1>你好客户端，我是服务器的哈哈哈哈消息</h1>',
-        method: 'webSocket_device_transport',
-        sn: 'webSocketCallBack'
-      }
+        msg: "<h1>你好客户端，我是服务器的哈哈哈哈消息</h1>",
+        method: "webSocket_device_transport",
+        sn: "webSocketCallBack",
+      };
       socket.send(JSON.stringify(socketObj));
       // 监听客户端发来的消息
       socket.on("message", (message: any) => {
         console.log(`WebSocket 客户端发送过来的消息: ${message}`);
+        const msgJson = JSON.parse(message);
         console.log(message);
+        console.log(msgJson);
         this.clients.forEach((client) => {
           // 判断是否处于连接上的
           if (client.readyState === WebSocket.OPEN) {
             // client.send(message);
             console.log("WebSocket发送消息了====>");
             client.send("" + message);
+            // 打字机效果服务端粗鲁实现
+            if (msgJson.sn == "webSocketCallBackYeah") {
+              const msg = "悲索之人烈焰加身，堕落者 不可饶恕，我既是引路的灯塔 也是净化的清泉。永恒燃烧的羽翼，带我脱离凡间的沉沦！圣火将你洗涤 今由烈火审判，于光明中得救。利刃在手 制裁八方！";
+              let socketObj = {
+                msg: "",
+                method: "webSocket_device_transport",
+                sn: "webSocketCallBackTypeWriter",
+              };
+              let index = 0;
+              let timer = setInterval(() => {
+                if (index < msg.length) {
+                  socketObj.msg = msg.charAt(index);
+                  client.send(JSON.stringify(socketObj));
+                  index++;
+                  console.log("WebSocket反馈消息了====>");
+                } else {
+                  clearInterval(timer);
+                  return
+                }
+              }, 100);
+            }
           }
         });
       });
@@ -58,4 +81,5 @@ class WebSocketServer {
     // }, 10000);
   }
 }
+
 export default WebSocketServer;

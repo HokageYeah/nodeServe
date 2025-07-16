@@ -21,7 +21,7 @@ const app: Express = express();
 // RS256:非对称加密
 app.use(
   expressjwt({ secret: publicKey, algorithms: ["RS256"] }).unless({
-    path: [/^\/api\//],
+    path: [/^\/api\//, /^\/test/],
   })
 );
 // 配置解析表单数据的中间件 application/x-www-form-urlencoded
@@ -52,6 +52,11 @@ app.get("/api/index", (req: Request, res: Response) => {
               </body>
           </html>
         `);
+});
+// 测试页面路由 - 返回HTML文件
+app.get('/test', (req, res) => {
+  // 修正路径，使用正确的路径解析方式
+  res.sendFile(path.join(__dirname, '../../public', 'test.html'));
 });
 // api接口是不需要token验证的 其他接口需要
 // app.use("/api", userRouter);

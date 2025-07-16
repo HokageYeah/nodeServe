@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket测试</title>
+</head>
+<body>
+    <h1>WebSocket测试页面</h1>
+    
+    <h3>连接方式选择:</h3>
+    <div>
+        <label>
+            <input type="radio" name="authMethod" value="cookie" checked>
+            使用Cookie认证
+        </label>
+        <br>
+        <label>
+            <input type="radio" name="authMethod" value="query">
+            使用URL参数认证
+        </label>
+        <br>
+        <label>
+            <input type="radio" name="authMethod" value="header">
+            使用Header认证
+        </label>
+    </div>
+    
+    <div style="margin: 20px 0;">
+        <input type="text" id="userId" placeholder="输入用户ID" value="testuser123">
+        <button onclick="connect()">连接WebSocket</button>
+        <button onclick="disconnect()">断开连接</button>
+    </div>
+    
+    <div>
+        <input type="text" id="message" placeholder="输入消息">
+        <button onclick="sendMessage()">发送</button>
+    </div>
+    
+    <div>
+        <h3>连接状态:</h3>
+        <div id="status">未连接</div>
+    </div>
+    
+    <div>
+        <h3>接收到的消息:</h3>
+        <div id="messages"></div>
+    </div>
+    
+    <script>
+        let ws = null;
+        
+        // 添加一个用户标识变量
+        const myUser = "client_" + Math.floor(Math.random() * 1000);
+
+        function connect() {
+            const authMethod = document.querySelector('input[name="authMethod"]:checked').value;
+            const userId = document.getElementById('userId').value;
+            
+            if (!userId) {
+                alert('请输入用户ID');
+                return;
+            }
+            
+            if (ws) {
+                ws.close();
+            }
+            
+            let wsUrl = 'ws://' + window.location.host + '/ws';
+            
+            if (authMethod === 'cookie') {
+                // 设置Cookie
+                document.cookie = "XXT_ID=" + userId + "; path=/";
+                addMessage('设置Cookie: XXT_ID=' + userId);
+            } else if (authMethod === 'query') {
+                // 使用URL参数
+                wsUrl += '?userId=' + encodeURIComponent(userId);
+                addMessage('使用URL参数: userId=' + userId);
+            } else if (authMethod === 'header') {
+                addMessage('注意: 浏览器WebSocket API不支持自定义Header，需要服务端支持');
+            }
+            
+            console.log('连接WebSocket:', wsUrl);
+            
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = function() {
+                console.log('WebSocket连接已打开');
+                document.getElementById('status').textContent = '已连接';
+                addMessage('连接已建立');
+            };
+            
+            // 接收消息
+            ws.addEventListener("message", function (message) {
+                console.log("触发时机", message);
+                
+                // 判断消息类型
+                if (message.data instanceof Blob) {
+                    // 如果是 Blob 对象，使用 FileReader 进行处理
+                    const reader = new FileReader();
+                    reader.onload = function () {
+                        try {
+                            const mes = JSON.parse(reader.result);
+                            console.log("接收到的 Blob 消息：", mes);
+                            addMessage("Blob消息: " + JSON.stringify(mes));
+                            
+                            // 在页面上渲染消息
+                            if (mes.user) {
+                                let p = document.createElement("p");
+                                p.innerText = `${mes.user === myUser ? "我" : mes.user} 说: ${mes.msg || mes.content || JSON.stringify(mes)}`;
+                                if (mes.user === myUser) {
+                                    p.style.cssText = "color:red;font-weight:bold";
+                                }
+                                document.body.appendChild(p);
+                            }
+                        } catch (e) {
+                            console.error("解析 Blob 消息失败:", e);
+                            addMessage("解析 Blob 消息失败: " + e.message);
+                            addMessage("原始数据: " + reader.result);
+                        }
+                    };
+                    reader.onerror = function (error) {
+                        console.error("读取 Blob 失败:", error);
+                        addMessage("读取 Blob 失败");
+                    };
+                    reader.readAsText(message.data);
+                } else {
+                    // 如果是字符串或其他类型，直接处理
+                    try {
+                        const data = typeof message.data === 'string' ? JSON.parse(message.data) : message.data;
+                        console.log("接收到的普通消息:", data);
+                        addMessage("普通消息: " + JSON.stringify(data));
+                    } catch (e) {
+                        console.error("解析普通消息失败:", e);
+                        addMessage("解析普通消息失败: " + e.message);
+                        addMessage("原始数据: " + message.data);
+                    }
+                }
+            });
+            
+            ws.onclose = function(event) {
+                console.log('WebSocket连接已关闭', event.code, event.reason);
+                document.getElementById('status').textContent = '已断开';
+                addMessage('连接已关闭 - Code: ' + event.code + ', Reason: ' + event.reason);
+            };
+            
+            ws.onerror = function(error) {
+                console.error('WebSocket错误:', error);
+                document.getElementById('status').textContent = '连接错误';
+                addMessage('连接错误: ' + error);
+            };
+        }
+        
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+        }
+        
+        function sendMessage() {
+            const message = document.getElementById('message').value;
+            if (message && ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(message);
+                document.getElementById('message').value = '';
+            } else {
+                alert('请先连接WebSocket');
+            }
+        }
+        
+        function addMessage(message) {
+            const messages = document.getElementById('messages');
+            const p = document.createElement('p');
+            p.textContent = new Date().toLocaleTimeString() + ': ' + message;
+            messages.appendChild(p);
+            messages.scrollTop = messages.scrollHeight;
+        }
+    </script>
+</body>
+</html> 
